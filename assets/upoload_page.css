@@ -1,0 +1,100 @@
+@import "cores.css";
+
+body {
+    margin: 0; /* Remover margens padrão do body */
+    padding: 0; /* Remover preenchimento padrão do body */
+    background: white; /* Cor de fundo desejada para toda a página */
+    height: 100%;
+    font-family: "Arial Narrow", sans-serif;
+}
+
+.index-div-app {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+    border: 4px solid gray;
+    padding: 20px;
+    z-index: 1; /* Mantém as divs abaixo do navbar */
+}
+
+/*Essa div recebe o header, conteúdo principal (que é uma outra div) e o footer*/
+.index-div-content {
+    border: 4px solid gold;
+    width: 100%;
+    height: 1500px;
+    padding: 20px;
+    margin-top: 80px;;
+
+}
+
+#id-navbar {
+    position: fixed;
+    top: 0;
+    left: 25px; /* Alinha a navbar à esquerda */
+    width: calc(100% - 50px); /* Ajusta a largura da navbar para ocupar o restante da largura disponível */
+    z-index: 1000; /* Mantém a navbar acima de outros elementos */
+    padding: 0; /* Remover padding indesejado */
+}
+
+
+.upload-section-page {
+    display: flex;
+    width: 100%;
+    border: 4px solid red;
+    height: 100%;
+    flex-direction: column;
+}
+
+.upload-section-page-1{
+    width: 100%;
+    height: 10% ;
+    border: 4px solid green;
+    display: flex;
+    flex-direction: column;
+}
+
+.upload-section-page-2{
+    width: 100%;
+    height: auto;
+    border: 4px solid blue;
+    display: flex;
+    flex-direction: row;
+    margin-top: 10px;
+}
+
+.upload-section-page-2-1 {
+    width: 30%;
+    height: auto;
+    border: 4px solid pink;
+    display: flex;
+    flex-direction: column;
+}
+
+.upload-section-page-2-2 {
+    width: 70%;
+    height: auto;
+    border: 4px solid black;
+    display: flex;
+
+}
+
+
+h6 {
+    font-size: 16px;
+    font-weight: 500;
+    margin-bottom: 1rem;
+    font-family: "Arial Narrow", sans-serif;
+}
+
+.custom-radio-items label {
+    color: gray;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.custom-radio-items input {
+    margin-right: 10px;
+}
+
+
