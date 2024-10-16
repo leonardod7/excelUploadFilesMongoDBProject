@@ -38,7 +38,7 @@ body {
 }
 
 
-.upload-section-page {
+.consult-section-page {
     display: flex;
     width: 100%;
     border: 4px solid red;
@@ -46,7 +46,7 @@ body {
     flex-direction: column;
 }
 
-.upload-section-page-1{
+.consult-section-page-1{
     width: 100%;
     height: 10% ;
     border: 4px solid green;
@@ -54,7 +54,7 @@ body {
     flex-direction: column;
 }
 
-.upload-section-page-2{
+.consult-section-page-2{
     width: 100%;
     height: auto;
     border: 4px solid blue;
@@ -63,7 +63,7 @@ body {
     margin-top: 10px;
 }
 
-.upload-section-page-2-1 {
+.consult-section-page-2-1 {
     width: 30%;
     height: auto;
     border: 4px solid pink;
@@ -71,7 +71,7 @@ body {
     flex-direction: column;
 }
 
-.upload-section-page-2-2 {
+.consult-section-page-2-2 {
     width: 70%;
     height: auto;
     border: 4px solid black;

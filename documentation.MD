@@ -34,6 +34,8 @@ Os arquivos deverão seguir um padrão de formatação e a aplicação deverá r
 - A aplicação deverá exibir os dados na tela quando solicitado.
 - A aplicação deverá exibir a quantidade de documentos armazenados.
 - A aplicação deverá apresentar opções de consulta e cadastro de arquivos para 3 modalidades de usinas: Eólicas, Solar e Hidrelétricas.
+- A aplicação deverá permitir a exclusão de arquivos.
+- A aplicação não deverá permitir a exclusão de arquivo quando restar apenas 1 único arquivo. Ela deverá exibir uma mensagem de erro.
 
 #### <font color=gray>4) Requisitos Não Funcionais:</font>
 
