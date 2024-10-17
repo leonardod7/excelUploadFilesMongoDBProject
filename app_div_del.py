@@ -24,33 +24,74 @@ lista_dict = [
 # Criação do aplicativo Dash
 app = dash.Dash(__name__)
 
+
 conteudo: html.Div = html.Div(
     className="div-content",
     id='content',
     children=[
+        # Div das informações
         html.Div(
             id=f'div-{i}',
             children=[
-                html.H4(d['nome']),
-                html.P(f"Empresa: {d['empresa']}"),
-                html.P(f"Descrição: {d['descricao']}"),
-                html.P(f"Data: {d['data']}"),
-                html.P(f"Tipo: {d['tipo']}"),
-                html.P(f"Parte: {d['parte']}"),
+                html.H4(children=[d['nome']],
+                        style={'fontFamily': 'Arial Narrow',
+                               'fontSize': '14px',
+                               'borderBottom': '2px solid gray',
+                               'paddingBottom': '5px',
+                               'marginTop': '5px',
+                               'border-radius': '5px'}),
+
+                html.P(children=[
+                    html.Span(children=["Empresa: "], style={'fontWeight': 'bold', 'color': 'gray'}),
+                    f"{d['empresa']}"], style={'fontFamily': 'Arial Narrow', 'fontSize': '12px'}),
+
+                html.P(children=[
+                    html.Span(children=["Descrição: "], style={'fontWeight': 'bold', 'color': 'gray'}),
+                    f"{d['descricao']}"], style={'fontFamily': 'Arial Narrow', 'fontSize': '12px'}),
+
+                html.P(children=[
+                    html.Span(children=["Data: "], style={'fontWeight': 'bold', 'color': 'gray'}),
+                    f"{d['data']}"], style={'fontFamily': 'Arial Narrow', 'fontSize': '12px'}),
+
+                html.P(children=[
+                    html.Span(children=["Tipo: "], style={'fontWeight': 'bold', 'color': 'gray'}),
+                    f"{d['tipo']}"], style={'fontFamily': 'Arial Narrow', 'fontSize': '12px'}),
+
+                html.P(children=[
+                    html.Span(children=["Parte: "], style={'fontWeight': 'bold', 'color': 'gray'}),
+                    f"{d['parte']}"], style={'fontFamily': 'Arial Narrow', 'fontSize': '12px'}),
+
                 html.Button(children=['🗑️'], id={'type': 'delete-button', 'index': i}, n_clicks=0)
             ],
-            style={'border': '1px solid #ccc', 'margin': '10px', 'padding': '10px'}
+            style={'border': '1px solid #ccc',
+                   'margin': '10px',
+                   'padding': '10px',
+                   'width': '300px',
+                   'background': "linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.8)), "
+                                 "url('/assets/img/eolicas.jpg')",  # Aplicando transparência na imagem
+                   'backgroundSize': 'cover',  # Ajusta a imagem para cobrir a div
+                   'backgroundPosition': 'center',  # Centraliza a imagem
+                   'border-radius': '10px'
+                   }
         ) for i, d in enumerate(lista_dict)
-    ])
+    ], style={'display': 'flex',
+              'flexDirection': 'space-evenly',
+              'border': '1px solid gold',
+              'padding': '10px'}
+)
 
 
+# Layout do aplicativo ------------------------------------------------------------------------------------------------
+app.layout = html.Div(children=[
 
-
-# Layout do aplicativo
-app.layout = html.Div([
     conteudo,
     html.Div(id='hidden-div', style={'display': 'none'})
-])
+], style={'margin': '20px',
+          'border': '1px solid black',
+          'display': 'flex',
+          'alignItems': 'center',
+          'justifyContent': 'center'}
+)
 
 
 # Callback para deletar divs
