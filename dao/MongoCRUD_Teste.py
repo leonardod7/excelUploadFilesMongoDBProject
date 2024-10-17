@@ -58,14 +58,18 @@ class MongoDBCRUD:
             query = {
                 "empresa": unique_fields.get("empresa"),  # Nome da empresa
                 "nome": unique_fields.get("nome"),  # nome do cenário
-                "parte": document["parte"]  # Verifica a parte do documento
+                "parte": document["parte"],  # Verifica a parte do documento
+                "tipo": document["tipo"]  # Verifica o tipo do documento
             }
 
             # Verifica se um documento com essa combinação já existe
             existing_document = collection.find_one(query)
 
             if existing_document:
-                print(f"Documento com empresa '{query['empresa']}', nome '{query['nome']}' e parte '{query['parte']}' já existe.")
+                print(f"Documento com empresa '{query['empresa']}', "
+                      f"nome '{query['nome']}' "
+                      f"tipo '{query['tipo']}' "
+                      f"parte '{query['parte']}' já existe.")
                 return existing_document  # Retorna o documento existente
 
         # Se não existe, insere o novo documento
@@ -135,7 +139,7 @@ if __name__ == '__main__':
     cliente.connect_to_db()
     db_connection = cliente.get_db_connection()
 
-    collection_name: str = "SPE Alto da Serra"
+    collection_name: str = "SPE Boi Gordo"
     eolicas_crud = MongoDBCRUD(db_connection=cliente, collection_name=collection_name)
 
     print("Coleções no banco de dados:")

@@ -199,17 +199,14 @@ def listar_colecoes(value):
 def listar_documentos_eolicas(collection_name):
 
     # TODO: Criar a função de listar documentos, com base no nome da coleção e no banco de dados
+
+
+
+
+
     # TODO: temos que definir quais informações serão listadas e o seu formato
 
     print(collection_name)  # debug
 
     return collection_name
-    # cliente, eolicas_crud = conectar_ao_banco(collection_name=collection_name)
-    #
-    # try:
-    #     documentos = eolicas_crud.list_documents()
-    # finally:
-    #     cliente.close_connection()
-    #
-    # return documentos
 

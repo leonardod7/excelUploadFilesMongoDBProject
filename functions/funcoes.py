@@ -63,7 +63,7 @@ def criar_partes_documento(file_path: str, setor: str, empresa_nome: str, cenari
     df_list_part_2 = df_long_2.to_dict(orient='records')
 
     documento_spe_dre_part_2 = {
-        "nome": "Cenário 1",
+        "nome": cenario_nome,
         "descricao": descricao_cenario,
         "data": datetime.now(),
         "setor": setor,
@@ -79,7 +79,7 @@ def criar_partes_documento(file_path: str, setor: str, empresa_nome: str, cenari
     df_list_part_3 = df_long_3.to_dict(orient='records')
 
     documento_spe_dre_part_3 = {
-        "nome": "Cenário 1",
+        "nome": cenario_nome,
         "descricao": descricao_cenario,
         "data": datetime.now(),
         "setor": setor,
@@ -95,7 +95,7 @@ def criar_partes_documento(file_path: str, setor: str, empresa_nome: str, cenari
     df_list_part_4 = df_long_4.to_dict(orient='records')
 
     documento_spe_dre_part_4 = {
-        "nome": "Cenário 1",
+        "nome": cenario_nome,
         "descricao": descricao_cenario,
         "data": datetime.now(),
         "setor": setor,

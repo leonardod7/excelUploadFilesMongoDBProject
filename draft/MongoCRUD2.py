@@ -44,6 +44,7 @@ class MongoDBCRUD:
         db_connection = self.__db_connection.get_db_connection()
         return db_connection.list_collection_names()
 
+    # TODO: Modificado
     def insert_document(self, document: dict, unique_fields: dict = None) -> dict:
         """
         Função que insere um documento na coleção, verificando antes se ele já existe com base em 'empresa', 'nome' e 'parte'.
@@ -54,11 +55,11 @@ class MongoDBCRUD:
         collection = self.get_collection()
 
         # Verifica se o documento contém o campo 'parte' e combina com os campos únicos
-        if "parte" in document and unique_fields:  # if "parte" in document and unique_fields:
+        if "parte" in document and unique_fields:
             query = {
-                "empresa": unique_fields.get("empresa"),  # Nome da empresa
-                "nome": unique_fields.get("nome"),  # nome do cenário
-                "parte": document["parte"]  # Verifica a parte do documento
+                "empresa": unique_fields.get("empresa"),
+                "nome": unique_fields.get("nome"),
+                "parte": document["parte"]  # Verifica a combinação de empresa, nome e parte
             }
 
             # Verifica se um documento com essa combinação já existe
@@ -71,8 +72,34 @@ class MongoDBCRUD:
         # Se não existe, insere o novo documento
         collection.insert_one(document)
         print(f"Documento com parte {document['parte']} inserido com sucesso.")
-
         return document
+
+    # TODO: Modificado
+    def insert_multiple_parts(self, documents: list[dict], unique_fields: dict) -> list[dict]:
+        """
+        Insere uma lista de documentos que representam partes diferentes do mesmo demonstrativo.
+        Verifica duplicidade por 'empresa', 'nome' e 'parte' para cada documento antes de inserir.
+
+        :param documents: Lista de documentos (partes) a serem inseridos.
+        :param unique_fields: Campos únicos usados para evitar duplicidade ('empresa', 'nome', etc.).
+        :return: Lista de documentos inseridos ou recuperados (se já existiam).
+        """
+
+        results = []
+
+        for document in documents:
+            # Insere cada parte separadamente, verificando duplicidade com os campos únicos
+            inserted_document = self.insert_document(document, unique_fields)
+            results.append(inserted_document)
+
+        return results
+
+    # TODO: Modificado
+    def document_exists(self, unique_fields: dict) -> bool:
+
+        collection = self.get_collection()
+
+        return collection.count_documents(unique_fields) > 0
 
     def delete_all_documents(self):
         """
@@ -135,7 +162,7 @@ if __name__ == '__main__':
     cliente.connect_to_db()
     db_connection = cliente.get_db_connection()
 
-    collection_name: str = "SPE Alto da Serra"
+    collection_name: str = "SPE Boi Gordo"
     eolicas_crud = MongoDBCRUD(db_connection=cliente, collection_name=collection_name)
 
     print("Coleções no banco de dados:")
@@ -144,5 +171,3 @@ if __name__ == '__main__':
     # Fechando a conexão
     cliente.close_connection()
 
-
-# Original

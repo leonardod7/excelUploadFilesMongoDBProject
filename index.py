@@ -43,5 +43,10 @@ def display_page(pathname):
         return upload_section_page()  # Página padrão é o upload de documentos
 
 
+
+
+
+
+# Rodando o app -------------------------------------------------------------------------------------------------------
 if __name__ == '__main__':
     app.run(debug=True, port=8058)
