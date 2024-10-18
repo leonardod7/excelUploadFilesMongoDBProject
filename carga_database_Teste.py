@@ -85,6 +85,10 @@ usinas_eolicas = [
 #  temos hidreletricas, Solar e olicas separados.
 
 
+
+
+
+
 if __name__ == '__main__':
 
     # 1) Inserção de Dados  --------------------------------------------------------------------------------------------
