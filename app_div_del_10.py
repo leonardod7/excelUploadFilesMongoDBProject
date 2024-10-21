@@ -89,23 +89,21 @@ app.layout = html.Div(children=[
     Input(component_id="cenarios-store", component_property="data")
 )
 def update_cards(cenarios):
+
     agrupado = agrupar_por_chave(lista=cenarios, chave="cenario")
     cards = []
     for grupo, itens in agrupado.items():
+        div: html.Div = html.Div(children=[
+            html.H3(children=[grupo], style={"textAlign": "center", "color": "gray"}),
+            html.Div([render_card(item) for item in itens],  style={'display': 'flex',
+                                                                    'flexDirection': 'space-around',
+                                                                    'border': '1px solid gold',
+                                                                    'padding': '10px'})
+        ])
+        # print(grupo)  # debug Cenário 1, Cenário 2, etc
+        # print(itens)  # debug Lista com os dicionários dos cenários parte 1, 2, 3, 4.
+        cards.append(div)  # Título do grupo
 
-        # TODO: Vamos criar uma div para cada grupo de cenários com o seu devito título, formato e cards
-        # div: html.Div = html.Div([
-        #     html.H3(children=[grupo], style={"textAlign": "center", "color": "gray"}),
-        #     html.Div([render_card(item) for item in itens], style={"display": "flex", "flexWrap": "wrap", "justifyContent": "center"})
-        # ])
-        # cards.append(div)
-        print(grupo)  # debug
-        print(itens)  # debug
-
-
-        cards.append(html.H3(grupo))  # Título do grupo
-        for item in itens:
-            cards.append(render_card(item))
     return cards
 
 # 1.2) Callback para excluir um card -----------------------------------------------------------------------------------
@@ -116,17 +114,63 @@ def update_cards(cenarios):
     prevent_initial_call=True
 )
 def delete_card(n_clicks, cenarios):
-    # Identificar o botão que foi clicado
-    ctx = dash.callback_context
-    if not ctx.triggered:
-        return cenarios
-    else:
-        triggered_id = eval(ctx.triggered[0]["prop_id"].split(".")[0])
-        card_id_to_delete = triggered_id["index"]
-        # Remover o card com o ID correspondente
-        cenarios = [cenario for cenario in cenarios if cenario["id"] != card_id_to_delete]
-        return cenarios
+    # Verificar se algum botão foi clicado
+    if not any(n_clicks):
+        return dash.no_update
+
+    # Identificar o índice do botão clicado
+    clicked_index = [i for i, click in enumerate(n_clicks) if click > 0][0]
+
+    # Obter o ID do cenário a ser deletado
+    card_id_to_delete = cenarios[clicked_index]["id"]
+
+    # Remover o card com o ID correspondente
+    cenarios = [cenario for cenario in cenarios if cenario["id"] != card_id_to_delete]
+
+    return cenarios
+
 
 # Executar o app
 if __name__ == "__main__":
-    app.run_server(debug=True, port=8033)
+    app.run_server(debug=True, port=8023)
+
+
+# callbacks originais --------------------------------------------------------------------------------------------------
+
+# # 1.1) Callback para atualizar os cards com base nos dados -----------------------------------------------------------
+# @app.callback(
+#     Output(component_id="cards-container", component_property="children"),
+#     Input(component_id="cenarios-store", component_property="data")
+# )
+# def update_cards(cenarios):
+#     agrupado = agrupar_por_chave(lista=cenarios, chave="cenario")
+#     cards = []
+#     for grupo, itens in agrupado.items():
+#
+#         print(grupo)  # debug Cenário 1, Cenário 2, etc
+#         print(itens)  # debug Lista com os dicionários dos cenários parte 1, 2, 3, 4.
+#
+#         cards.append(html.H3(grupo))  # Título do grupo
+#         for item in itens:  # para cada dicionário na lista de dicionarios
+#             cards.append(render_card(item))
+#     return cards
+
+
+# 1.2) Callback para excluir um card -----------------------------------------------------------------------------------
+# @app.callback(
+#     Output(component_id="cenarios-store", component_property="data"),
+#     Input(component_id={"type": "delete-button", "index": ALL}, component_property="n_clicks"),
+#     State(component_id="cenarios-store", component_property="data"),
+#     prevent_initial_call=True
+# )
+# def delete_card(n_clicks, cenarios):
+#     # Identificar o botão que foi clicado
+#     ctx = dash.callback_context
+#     if not ctx.triggered:
+#         return cenarios
+#     else:
+#         triggered_id = eval(ctx.triggered[0]["prop_id"].split(".")[0])
+#         card_id_to_delete = triggered_id["index"]
+#         # Remover o card com o ID correspondente
+#         cenarios = [cenario for cenario in cenarios if cenario["id"] != card_id_to_delete]
+#         return cenarios

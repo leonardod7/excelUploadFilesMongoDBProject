@@ -1,7 +1,7 @@
 # Importando as bibliotecas --------------------------------------------------------------------------------------------
 from dash import html, Input, Output, State, dash, dcc, page_registry, _dash_renderer
 
-from pages.inserir_documento import upload_section_page
+from pages.listar_documento import upload_section_page
 
 # Importando componentes do app ----------------------------------------------------------------------------------------
 from app import *
@@ -16,7 +16,7 @@ app.layout = html.Div(className="index-div-app",
                           navbar(),
 
                           # Store na aplicação como um todo
-                          dcc.Store(id='', data="", storage_type='session'),
+                          # dcc.Store(id='', data="", storage_type='session'),
 
                           # Container de páginas
                           dcc.Location(id='url', refresh=False),
@@ -34,9 +34,9 @@ app.layout = html.Div(className="index-div-app",
 )
 def display_page(pathname):
     if pathname == '/inserir-documento':
-        return upload_section_page()
+        return html.H3("under construction")
     elif pathname == '/consultar-documentos':
-        return html.H3("Consultar Documentos")
+        return upload_section_page()
     elif pathname == '/home':
         return html.H3("Home")
     else:

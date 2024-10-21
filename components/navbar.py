@@ -8,8 +8,8 @@ def navbar():
     navbar = dbc.NavbarSimple(
         children=[
             dbc.NavItem(dbc.NavLink(children="Home", href="/home")),
-            dbc.NavItem(dbc.NavLink(children="Inserir Documento", href="/inserir-documento")),
             dbc.NavItem(dbc.NavLink(children="Consultar Documentos", href="/consultar-documentos")),
+            dbc.NavItem(dbc.NavLink(children="Inserir Documento", href="/inserir-documento")),
         ],
         # Usar dbc.Row para organizar a imagem e o nome da marca lado a lado
         brand=dbc.Row(

@@ -1,6 +1,10 @@
 from datetime import datetime
 import pandas as pd
 
+from dao.MongoCRUD import MongoDBCRUD
+from model.MongoConnection import MongoEolicasConnection, MongoSolarConnection, MongoHidroConnection
+
+# 1) Função para criar as partes do documento --------------------------------------------------------------------------
 def criar_partes_documento(file_path: str, setor: str, empresa_nome: str, cenario_nome: str,
                            descricao_cenario: str, sheet_name: str, demonstrativo_name: str, nome_segunda_coluna: str) -> list[dict]:
 
@@ -108,3 +112,34 @@ def criar_partes_documento(file_path: str, setor: str, empresa_nome: str, cenari
     lista: list = [documento_spe_dre_part_1, documento_spe_dre_part_2, documento_spe_dre_part_3, documento_spe_dre_part_4]
 
     return lista
+
+# 2) Função para conectar ao banco de dados e retornar as instâncias do cliente e do CRUD ------------------------------
+def conectar_ao_banco(collection_name: str, database_name: str):
+    if database_name == 'Eólicas':
+        cliente = MongoEolicasConnection()
+        cliente.connect_to_db()
+        eolicas_crud = MongoDBCRUD(db_connection=cliente, collection_name=collection_name)
+        return cliente, eolicas_crud
+    elif database_name == 'Solar':
+        cliente = MongoSolarConnection()
+        cliente.connect_to_db()
+        solar_crud = MongoDBCRUD(db_connection=cliente, collection_name=collection_name)
+        return cliente, solar_crud
+    else:
+        cliente = MongoHidroConnection()
+        cliente.connect_to_db()
+        hidro_crud = MongoDBCRUD(db_connection=cliente, collection_name=collection_name)
+        return cliente, hidro_crud
+
+
+# 3) Função de agrupamento por chave -----------------------------------------------------------------------------------
+def agrupar_por_chave(lista: list[dict], chave: str):
+    grupos = {}
+    for item in lista:
+        key = item[chave]
+        if key not in grupos:
+            grupos[key] = []
+        grupos[key].append(item)
+    return grupos
+
+
