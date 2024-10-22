@@ -144,6 +144,7 @@ def agrupar_por_chave(lista: list[dict], chave: str):
         grupos[key].append(item)
     return grupos
 
+
 # 4) Função para renderizar cards --------------------------------------------------------------------------------------
 def render_card(cenario) -> dbc.Card:
     card: dbc.Card = dbc.Card(
@@ -199,7 +200,7 @@ def render_card(cenario) -> dbc.Card:
                           style={
                               'fontWeight': 'bold',
                               'color': 'gray',
-                              'fontSize': '14px',
+                              'fontSize': '12px',
                               'fontFamily': 'Arial Narrow',
                               'lineHeight': '20px'  # Ajuste para alinhar com a altura da imagem
                           }),
@@ -251,3 +252,22 @@ def render_card(cenario) -> dbc.Card:
                }
     )
     return card
+
+
+# 5) Função para formatar a data brasileira ----------------------------------------------------------------------------
+def formatar_data_brasileira(data):
+    """Formata uma data do Python para o formato DD/MM/AAAA HH:MM:SS."""
+    if isinstance(data, datetime):
+        return data.strftime('%d/%m/%Y %H:%M:%S')
+    return data
+
+
+# 6) Função para aplicar formatação de datas ---------------------------------------------------------------------------
+def aplicar_formato_data(documento):
+    """Percorre o documento e formata as datas encontradas no formato brasileiro."""
+    for chave_cenario, entradas in documento.items():
+        for entrada in entradas:
+            # Formata a data de cada entrada se for uma instância de datetime
+            if 'data' in entrada and isinstance(entrada['data'], datetime):
+                entrada['data'] = formatar_data_brasileira(entrada['data'])
+    return documento

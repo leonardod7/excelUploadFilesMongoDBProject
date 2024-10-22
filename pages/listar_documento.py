@@ -1,9 +1,12 @@
+from datetime import datetime
+
+from bson import ObjectId
 from dash import dcc, html, Input, Output, State, callback
 from app import cache  # Importar o cache configurado
 import dash_bootstrap_components as dbc
 from dash.exceptions import PreventUpdate
 from functions.agrupar_por_chave import agrupar_por_chave
-from functions.funcoes import conectar_ao_banco, render_card
+from functions.funcoes import conectar_ao_banco, render_card, aplicar_formato_data
 import dash_mantine_components as dmc
 
 # 1) Dados iniciais das coleções ---------------------------------------------------------------------------------------
@@ -13,9 +16,10 @@ collection_solar_base_name: str = "Parque Solar 1"
 collection_hidro_base_name: str = "UHE 1"
 
 
+
+
 # 2) Página de consultar documentos ------------------------------------------------------------------------------------
 def consultar_documentos_page():
-
     page: html.Div = html.Div(
         id="id-upload-section-page",
         className="consult-section-page",
@@ -25,7 +29,6 @@ def consultar_documentos_page():
             html.Div(
                 className="consult-section-page-0",
                 children=[
-
 
                 ]),
 
@@ -39,31 +42,39 @@ def consultar_documentos_page():
                         id='id-radio-items-bancos',
                         className="custom-radio-items",
                         options=[
-                            {
-                                'label': html.Span([
-                                    html.Img(src='/assets/img/db_cinza.png',
-                                             style={'width': '20px', 'height': '20px', 'marginRight': '10px'}),
-                                    "Eólicas"
-                                ]),
+                            {'label': html.Span(children=[
+                                html.Img(src='/assets/img/db_cinza.png',
+                                         style={'width': '20px', 'height': '20px', 'marginRight': '10px'}),
+                                "Eólicas"
+                            ], style={
+                                'fontWeight': 'bold',
+                                'fontFamily': 'Arial Narrow',
+                                'fontSize': '14px',
+                            }),
                                 'value': 'Eólicas'
                             },
-                            {
-                                'label': html.Span([
-                                    html.Img(src='/assets/img/db_cinza.png',
-                                             style={'width': '20px', 'height': '20px', 'marginRight': '10px'}),
-                                    "Solar"
-                                ]),
+                            {'label': html.Span(children=[
+                                html.Img(src='/assets/img/db_cinza.png',
+                                         style={'width': '20px', 'height': '20px', 'marginRight': '10px'}),
+                                "Solar"
+                            ], style={
+                                'fontWeight': 'bold',
+                                'fontFamily': 'Arial Narrow',
+                                'fontSize': '14px',
+                            }),
                                 'value': 'Solar'
                             },
-                            {
-                                'label': html.Span([
-                                    html.Img(src='/assets/img/db_cinza.png',
-                                             style={'width': '20px', 'height': '20px', 'marginRight': '10px'}),
-                                    "Hidrelétricas"
-                                ]),
+                            {'label': html.Span(children=[
+                                html.Img(src='/assets/img/db_cinza.png',
+                                         style={'width': '20px', 'height': '20px', 'marginRight': '10px'}),
+                                "Hidrelétricas"
+                            ], style={
+                                'fontWeight': 'bold',
+                                'fontFamily': 'Arial Narrow',
+                                'fontSize': '14px',
+                            }),
                                 'value': 'Hidrelétricas'
                             }
-
                         ], value='Eólicas'),
                 ]),
             # Div - 2 -------------------------------------------------------------------------------------------
@@ -74,7 +85,8 @@ def consultar_documentos_page():
                     # Div rosa ---------------------------------------------------------------------------------------
                     html.Div(className="consult-section-page-2-1",
                              children=[
-                                 html.H6(children=["Escolha a Coleção de Dados:"]),
+                                 html.H6(children=["Escolha a Coleção de Dados:"],
+                                         style={'fontWeight': 'bold', 'color': 'gray', 'fontFamily': 'Arial Narrow'}),
                                  html.Div(id="id-div-colecoes", children=[]),
                              ]),
                     # Div preta --------------------------------------------------------------------------------------
@@ -123,7 +135,12 @@ def listar_colecoes(value):
         dc_radio_eolicas: dcc.RadioItems = dcc.RadioItems(id='id-colecoes-radio',  # id-colecoes-radio-eolicas
                                                           className="custom-radio-items",
                                                           options=radio_items,
-                                                          value=radio_items[0]['value'] if radio_items else None)
+                                                          value=radio_items[0]['value'] if radio_items else None,
+                                                          style={
+                                                              'fontWeight': 'bold',
+                                                              'fontFamily': 'Arial Narrow',
+                                                              'fontSize': '14px',
+                                                          })
 
         return dc_radio_eolicas
 
@@ -152,7 +169,12 @@ def listar_colecoes(value):
         dc_radio_solar: dcc.RadioItems = dcc.RadioItems(id='id-colecoes-radio',  # id-colecoes-radio-solar
                                                         className="custom-radio-items",
                                                         options=radio_items,
-                                                        value=radio_items[0]['value'] if radio_items else None)
+                                                        value=radio_items[0]['value'] if radio_items else None,
+                                                        style={
+                                                            'fontWeight': 'bold',
+                                                            'fontFamily': 'Arial Narrow',
+                                                            'fontSize': '14px',
+                                                        })
 
         return dc_radio_solar
 
@@ -181,7 +203,12 @@ def listar_colecoes(value):
         dc_radio_hidro: dcc.RadioItems = dcc.RadioItems(id='id-colecoes-radio',  # id-colecoes-radio-hidro
                                                         className="custom-radio-items",
                                                         options=radio_items,
-                                                        value=radio_items[0]['value'] if radio_items else None)
+                                                        value=radio_items[0]['value'] if radio_items else None,
+                                                        style={
+                                                            'fontWeight': 'bold',
+                                                            'fontFamily': 'Arial Narrow',
+                                                            'fontSize': '14px',
+                                                        })
 
         return dc_radio_hidro
 
@@ -210,24 +237,18 @@ def listar_colecoes(db_name, colecoes_div, collection):
         try:
             response: list[dict] = crud.select_many_documents(query=filtro, projection=projecao)
             agrupado = agrupar_por_chave(lista=response, chave="nome")
+            # print(agrupado)  # debug
+
+            lista_formatada = aplicar_formato_data(agrupado)
+            # print(lista_formatada)  # debug
 
             cards = []
-
-            # Opção Anterior
-            # for grupo, itens in agrupado.items():
-            #     div: html.Div = html.Div(children=[
-            #         html.H5(children=[grupo], style={"textAlign": "left",
-            #                                          "color": "gray",
-            #                                          "marginTop": "10px",
-            #                                          'fontWeight': 'bold',
-            #                                          'fontFamily': 'Arial Narrow',
-            #                                          'fontSize': '16px'}),
 
             for grupo, itens in agrupado.items():
                 div: html.Div = html.Div(children=[
                     dmc.Stack([
                         dmc.Divider(label=grupo,
-                                    color="gray",
+                                    color="lightgray",
                                     labelPosition="center",
                                     size="md",
                                     style={
@@ -239,13 +260,11 @@ def listar_colecoes(db_name, colecoes_div, collection):
                                         'color': 'gray',
                                     })]),
 
-
-
                     html.Div([render_card(cenario=item) for item in itens], style={'display': 'flex',
                                                                                    'flexDirection': 'column',
                                                                                    # 'border': '1px solid gold',
                                                                                    'padding': '10px',
-                                                                                   'marginBottom': '10px',})
+                                                                                   'marginBottom': '10px', })
                 ])
                 # print(grupo)  # debug Cenário 1, Cenário 2, etc
                 # print(itens)  # debug Lista com os dicionários dos cenários parte 1, 2, 3, 4.
@@ -258,26 +277,24 @@ def listar_colecoes(db_name, colecoes_div, collection):
     else:
         return "Nenhuma coleção selecionada."
 
-# TODO: Implementar a exclusão de documentos no banco de dados, igual ao arquivo app_div_del_10.py
-# TODO: Formatar o datetime para string no formato dd/mm/aaaa
 
+# TODO: Implementar a exclusão de documentos no banco de dados, igual ao arquivo app_div_del_10.py
 
 
 
 # Executar o app
 if __name__ == "__main__":
-    colecao = "SPE Ventos da Serra"
-    cliente, crud = conectar_ao_banco(collection_name=colecao, database_name="Eólicas")
-    # print(crud.list_collections())  # debug
-    filtro: dict = {"empresa": colecao}
-    projecao = {"_id": 1, "nome": 1, "descricao": 1, "data": 1, "empresa": 1, "tipo": 1, "parte": 1, "setor": 1}
-    response: list[dict] = crud.select_many_documents(query=filtro, projection=projecao)
-    # print(response)  # debug
-    agrupado = agrupar_por_chave(lista=response, chave="nome")
-    # Debug agrupado --------------------------------------------------------------------------------------------------
-    print(agrupado)
-    # {'Cenário 1': [
-    #     {'_id': ObjectId('67164c6d22f6e78ed752c3ec'), 'nome': 'Cenário 1', 'descricao': 'Cenário de venda de parques solares + 8%', 'data': datetime.datetime(2024, 10, 21, 9, 43, 24, 923000), 'setor': 'eolicas', 'empresa': 'SPE Ventos da Serra', 'tipo': 'dre', 'parte': 1},
-    #     {'_id': ObjectId('67164c6d22f6e78ed752c3ed'), 'nome': 'Cenário 1', 'descricao': 'Cenário de venda de parques solares + 8%', 'data': datetime.datetime(2024, 10, 21, 9, 43, 24, 939000), 'setor': 'eolicas', 'empresa': 'SPE Ventos da Serra', 'tipo': 'dre', 'parte': 2},
-    #     {'_id': ObjectId('67164c6d22f6e78ed752c3ee'), 'nome': 'Cenário 1', 'descricao': 'Cenário de venda de parques solares + 8%', 'data': datetime.datetime(2024, 10, 21, 9, 43, 24, 956000), 'setor': 'eolicas', 'empresa': 'SPE Ventos da Serra', 'tipo': 'dre', 'parte': 3},
-    #     {'_id': ObjectId('67164c6d22f6e78ed752c3ef'), 'nome': 'Cenário 1', 'descricao': 'Cenário de venda de parques solares + 8%', 'data': datetime.datetime(2024, 10, 21, 9, 43, 24, 973000), 'setor': 'eolicas', 'empresa': 'SPE Ventos da Serra', 'tipo': 'dre', 'parte': 4}]}
+    pass
+    # colecao = "SPE Ventos da Serra"
+    # cliente, crud = conectar_ao_banco(collection_name=colecao, database_name="Eólicas")
+    # # print(crud.list_collections())  # debug
+    # filtro: dict = {"empresa": colecao}
+    # projecao = {"_id": 1, "nome": 1, "descricao": 1, "data": 1, "empresa": 1, "tipo": 1, "parte": 1, "setor": 1}
+    # response: list[dict] = crud.select_many_documents(query=filtro, projection=projecao)
+    # # print(response)  # debug
+    # agrupado = agrupar_por_chave(lista=response, chave="nome")
+    # # Debug agrupado --------------------------------------------------------------------------------------------------
+    # print(agrupado)
+
+
+
