@@ -3,8 +3,7 @@ from app import cache  # Importar o cache configurado
 import dash_bootstrap_components as dbc
 from dash.exceptions import PreventUpdate
 from functions.agrupar_por_chave import agrupar_por_chave
-from functions.funcoes import conectar_ao_banco, render_card
-import dash_mantine_components as dmc
+from functions.funcoes import conectar_ao_banco
 
 # 1) Dados iniciais das coleções ---------------------------------------------------------------------------------------
 
@@ -13,28 +12,66 @@ collection_solar_base_name: str = "Parque Solar 1"
 collection_hidro_base_name: str = "UHE 1"
 
 
-# 2) Página de consultar documentos ------------------------------------------------------------------------------------
-def consultar_documentos_page():
+# Função para renderizar cards -----------------------------------------------------------------------------------------
+def render_card(cenario) -> dbc.Card:
+    card: dbc.Card = dbc.Card(
+        dbc.CardBody([
+            html.H4(children=[f"{cenario['nome']}"], className="card-title", style={'fontFamily': 'Arial Narrow',
+                                                                                    'fontSize': '14px',
+                                                                                    'borderBottom': '2px solid gray',
+                                                                                    'paddingBottom': '5px',
+                                                                                    'marginTop': '5px',
+                                                                                    'border-radius': '5px'}),
 
+            html.P(children=[html.Span(children=["Parte: "], style={'fontWeight': 'bold', 'color': 'gray'}),
+                             f"{cenario['parte']}"], className="card-text",
+                   style={'fontFamily': 'Arial Narrow', 'fontSize': '12px'}),
+
+            html.P(children=[html.Span(children=["Empresa: "], style={'fontWeight': 'bold', 'color': 'gray'}),
+                             f"{cenario['empresa']}"], className="card-text",
+                   style={'fontFamily': 'Arial Narrow', 'fontSize': '12px'}),
+
+            html.P(children=[html.Span(children=["Data: "], style={'fontWeight': 'bold', 'color': 'gray'}),
+                             f"{cenario['data']}"], className="card-text",
+                   style={'fontFamily': 'Arial Narrow', 'fontSize': '12px'}),
+
+            html.P(children=[html.Span(children=["Tipo: "], style={'fontWeight': 'bold', 'color': 'gray'}),
+                             f"{cenario['tipo']}"], className="card-text",
+                   style={'fontFamily': 'Arial Narrow', 'fontSize': '12px'}),
+
+            html.P(children=[html.Span(children=["Descrição: "], style={'fontWeight': 'bold', 'color': 'gray'}),
+                             f"{cenario['descricao']}"], className="card-text",
+                   style={'fontFamily': 'Arial Narrow', 'fontSize': '12px'}),
+
+            # Botão de exclusão
+            # dbc.Button(children=["🗑️"], id={"type": "delete-button", "index": cenario["id"]}, n_clicks=0, color="danger")
+        ]),
+        style={'border': '1px solid #ccc',
+               'margin': '10px',
+               'padding': '5px',
+               'width': '500px',  # Largura fixa
+               'height': '300px',  # Altura fixa
+               'background': "linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.8)), "
+                             "url('/assets/img/eolicas.jpg')",
+               'backgroundSize': 'cover',
+               'backgroundPosition': 'center',
+               'border-radius': '10px'
+               }
+    )
+    return card
+
+
+# 2) Página de consultar documentos ------------------------------------------------------------------------------------
+def upload_section_page():
     page: html.Div = html.Div(
         id="id-upload-section-page",
         className="consult-section-page",
         children=[
-
-            # Div - 0 -------------------------------------------------------------------------------------------
-            html.Div(
-                className="consult-section-page-0",
-                children=[
-
-
-                ]),
-
             # Div - 1 -------------------------------------------------------------------------------------------
             html.Div(
                 className="consult-section-page-1",
                 children=[
-                    html.H6(children=["Escolha o Banco de Dados no Mongo DB Atlas:"],
-                            style={'fontWeight': 'bold', 'color': 'gray', 'fontFamily': 'Arial Narrow'}),
+                    html.H6(children=["Escolha o Banco de Dados no Mongo DB Atlas:"]),
                     dcc.RadioItems(
                         id='id-radio-items-bancos',
                         className="custom-radio-items",
@@ -213,39 +250,13 @@ def listar_colecoes(db_name, colecoes_div, collection):
 
             cards = []
 
-            # Opção Anterior
-            # for grupo, itens in agrupado.items():
-            #     div: html.Div = html.Div(children=[
-            #         html.H5(children=[grupo], style={"textAlign": "left",
-            #                                          "color": "gray",
-            #                                          "marginTop": "10px",
-            #                                          'fontWeight': 'bold',
-            #                                          'fontFamily': 'Arial Narrow',
-            #                                          'fontSize': '16px'}),
-
             for grupo, itens in agrupado.items():
                 div: html.Div = html.Div(children=[
-                    dmc.Stack([
-                        dmc.Divider(label=grupo,
-                                    color="gray",
-                                    labelPosition="center",
-                                    size="md",
-                                    style={
-                                        'fontWeight': 'bold',
-                                        'fontFamily': 'Arial Narrow',
-                                        'fontSize': '16px',
-                                        'marginTop': '10px',
-                                        'marginBottom': '10px',
-                                        'color': 'gray',
-                                    })]),
-
-
-
+                    html.H5(children=[grupo], style={"textAlign": "center", "color": "gray", "marginTop": "10px"}),
                     html.Div([render_card(cenario=item) for item in itens], style={'display': 'flex',
-                                                                                   'flexDirection': 'column',
-                                                                                   # 'border': '1px solid gold',
-                                                                                   'padding': '10px',
-                                                                                   'marginBottom': '10px',})
+                                                                                   'flexDirection': 'space-around',
+                                                                                   'border': '1px solid gold',
+                                                                                   'padding': '10px'})
                 ])
                 # print(grupo)  # debug Cenário 1, Cenário 2, etc
                 # print(itens)  # debug Lista com os dicionários dos cenários parte 1, 2, 3, 4.
@@ -259,10 +270,7 @@ def listar_colecoes(db_name, colecoes_div, collection):
         return "Nenhuma coleção selecionada."
 
 # TODO: Implementar a exclusão de documentos no banco de dados, igual ao arquivo app_div_del_10.py
-# TODO: Formatar o datetime para string no formato dd/mm/aaaa
-
-
-
+# TODO: Formatar melhor o tamanho das divs e cards, para que fiquem com o mesmo tamanho.
 
 # Executar o app
 if __name__ == "__main__":

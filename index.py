@@ -1,7 +1,8 @@
 # Importando as bibliotecas --------------------------------------------------------------------------------------------
 from dash import html, Input, Output, State, dash, dcc, page_registry, _dash_renderer
-
-from pages.listar_documento import upload_section_page
+import dash_mantine_components as dmc
+from pages.listar_documento import consultar_documentos_page
+_dash_renderer._set_react_version("18.2.0")
 
 # Importando componentes do app ----------------------------------------------------------------------------------------
 from app import *
@@ -9,22 +10,24 @@ from components.navbar import navbar
 
 # Criando o app --------------------------------------------------------------------------------------------------------
 
-app.layout = html.Div(className="index-div-app",
-                      children=[
+app.layout = dmc.MantineProvider(
+    html.Div(className="index-div-app",
+             children=[
 
-                          # Barra de navegação
-                          navbar(),
+                 # Barra de navegação
+                 navbar(),
 
-                          # Store na aplicação como um todo
-                          # dcc.Store(id='', data="", storage_type='session'),
+                 # Store na aplicação como um todo
+                 # dcc.Store(id='', data="", storage_type='session'),
 
-                          # Container de páginas
-                          dcc.Location(id='url', refresh=False),
+                 # Container de páginas
+                 dcc.Location(id='url', refresh=False),
 
-                          # Conteúdo do app
-                          html.Div(className="index-div-content", id="page-content", children=[]),
+                 # Conteúdo do app
+                 html.Div(className="index-div-content", id="page-content", children=[]),
 
-                      ])
+             ])
+)
 
 
 # Atualiza o conteúdo da página com base na URL
@@ -36,15 +39,11 @@ def display_page(pathname):
     if pathname == '/inserir-documento':
         return html.H3("under construction")
     elif pathname == '/consultar-documentos':
-        return upload_section_page()
+        return consultar_documentos_page()
     elif pathname == '/home':
         return html.H3("Home")
     else:
-        return upload_section_page()  # Página padrão é o upload de documentos
-
-
-
-
+        return consultar_documentos_page()  # Página padrão é o upload de documentos
 
 
 # Rodando o app -------------------------------------------------------------------------------------------------------

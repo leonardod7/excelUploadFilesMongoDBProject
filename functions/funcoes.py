@@ -1,5 +1,7 @@
 from datetime import datetime
 import pandas as pd
+import dash_bootstrap_components as dbc
+from dash import dcc, html
 
 from dao.MongoCRUD import MongoDBCRUD
 from model.MongoConnection import MongoEolicasConnection, MongoSolarConnection, MongoHidroConnection
@@ -142,4 +144,110 @@ def agrupar_por_chave(lista: list[dict], chave: str):
         grupos[key].append(item)
     return grupos
 
+# 4) Função para renderizar cards --------------------------------------------------------------------------------------
+def render_card(cenario) -> dbc.Card:
+    card: dbc.Card = dbc.Card(
+        dbc.CardBody([
+            # TODO: Colocar o nome do cenário com uma imagem e botão dentro de uma div.
+            # TODO: Incluir uma linha ao lado do nome
+            # TODO: Incluir um botão de exclusão
+            html.H4(children=[html.Span(children=[f"{cenario['nome']}"], style={'fontWeight': 'bold', 'color': 'gray'})],
+                    className="card-title", style={'fontFamily': 'Arial Narrow',
+                                                   'fontSize': '14px',
+                                                   'borderBottom': '0.5px solid gray',
+                                                   # 'paddingBottom': '5px',
+                                                   'marginTop': '5px',}),
 
+            # Div com o título, parte, empresa, data e tipo
+            html.Div(children=[
+
+                html.P(children=[
+                    html.Span(children=["Parte: "], style={'fontWeight': 'bold', 'color': 'gray'}),
+                    f"{cenario['parte']}",
+                    html.Span(children=[" |"], style={'fontStyle': 'italic', 'color': 'black'})  # Estilizando o separador
+                ], className="card-text",
+                    style={'fontFamily': 'Arial Narrow', 'fontSize': '12px'}),
+
+                html.P(children=[
+                    html.Span(children=["Empresa: "], style={'fontWeight': 'bold', 'color': 'gray'}),
+                    f"{cenario['empresa']}",
+                    html.Span(children=[" |"], style={'fontStyle': 'italic', 'color': 'black'})  # Estilizando o separador
+                ], className="card-text",
+                    style={'fontFamily': 'Arial Narrow', 'fontSize': '12px'}),
+
+                html.P(children=[
+                    html.Span(children=["Data: "], style={'fontWeight': 'bold', 'color': 'gray'}),
+                    f"{cenario['data']}",
+                    html.Span(children=[" |"], style={'fontStyle': 'italic', 'color': 'black'})  # Estilizando o separador
+                ], className="card-text",
+                    style={'fontFamily': 'Arial Narrow', 'fontSize': '12px'}),
+
+                html.P(children=[
+                    html.Span(children=["Tipo: "], style={'fontWeight': 'bold', 'color': 'gray'}),
+                    f"{cenario['tipo']}",
+                    html.Span(children=[" |"], style={'fontStyle': 'italic', 'color': 'black'})  # Estilizando o separador
+                ], className="card-text",
+                    style={'fontFamily': 'Arial Narrow', 'fontSize': '12px'}),
+            ],
+                style={'display': 'flex', 'flexDirection': 'row', 'gap': '35px'}
+            ),
+
+            # Div com a descrição
+            html.Div(children=[
+                # Texto da descrição
+                html.Span(children=["Descrição: "],
+                          style={
+                              'fontWeight': 'bold',
+                              'color': 'gray',
+                              'fontSize': '14px',
+                              'fontFamily': 'Arial Narrow',
+                              'lineHeight': '20px'  # Ajuste para alinhar com a altura da imagem
+                          }),
+
+                # Descrição em si
+                html.P(children=[f"{cenario['descricao']}"],
+                       style={
+                           'fontFamily': 'Arial Narrow',
+                           'fontSize': '12px',
+                           'margin': '0',  # Remover margens para alinhamento exato
+                           'lineHeight': '20px'  # Mesma altura de linha que o span e a imagem
+                       }),
+
+                # Imagem ao lado do texto
+                html.Img(src='/assets/img/excel_icon.png',
+                         style={
+                             'height': '20px',
+                             'width': '20px',
+                             'marginLeft': '260px',
+                             'verticalAlign': 'middle'  # Garantir que a imagem alinhe ao centro
+                         })
+            ],
+                style={
+                    'display': 'flex',
+                    'flexDirection': 'row',
+                    'gap': '10px',  # Ajuste de espaço entre os elementos
+                    # 'border': '1px solid #ccc',
+                    'alignItems': 'center',  # Centralizar verticalmente
+                    'padding': '5px'  # Um pouco mais de padding para garantir espaço interno
+                }
+            ),
+
+
+
+            # Botão de exclusão
+            # dbc.Button(children=["🗑️"], id={"type": "delete-button", "index": cenario["id"]}, n_clicks=0, color="danger")
+        ]),
+        style={'border': '1px solid #ccc',
+               'margin': '10px',
+               'marginBottom': '20px',
+               'padding': '3px',
+               'width': '600px',  # Largura fixa
+               'height': '130px',  # Altura fixa
+               'background': "linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.8)), "
+                             "url('/assets/img/eolicas.jpg')",
+               'backgroundSize': 'cover',
+               'backgroundPosition': 'center',
+               'border-radius': '10px'
+               }
+    )
+    return card

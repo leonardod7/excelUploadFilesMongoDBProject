@@ -11,14 +11,14 @@ body {
 .index-div-app {
     display: flex;
     flex-direction: column;
-    height: 100%;
+    height: auto;
     width: 100%;
-    /*border: 4px solid gray;*/
+    border: 4px solid gray;
     padding: 20px;
     z-index: 1; /* Mantém as divs abaixo do navbar */
 }
 
-/*Essa div recebe o header, conteúdo principal (que é uma outra div) e o footer*/
+/*Essa div recebe o conteúdo principal (que é uma outra div) e o footer*/
 .index-div-content {
     /*border: 4px solid gold;*/
     width: 100%;
@@ -43,7 +43,7 @@ body {
     display: flex;
     width: 100%;
     /*border: 4px solid red;*/
-    height: 100%;
+    height: auto;
     flex-direction: column;
 }
 
@@ -51,12 +51,16 @@ body {
     width: 100%;
     height: 10% ;
     /*border: 4px solid green;*/
+    border-style: inset;
+    border-radius: 10px;
+    /*border-bottom: 4px solid green; !* Primeira linha *!*/
     display: flex;
     flex-direction: column;
+    padding: 10px;
 }
 
 .consult-section-page-2{
-    width: 100%;
+    width: auto;
     height: auto;
     /*border: 2px solid blue;*/
     display: flex;
@@ -66,18 +70,23 @@ body {
 }
 
 .consult-section-page-2-1 {
-    width: 30%;
+    width: 340px;
     height: auto;
-    border: 4px solid pink;
-    /*border-right: 3px inset gray; !* Aplica borda somente no lado direito *!*/
+    /*border: 4px solid pink;*/
+    border-style: inset;
+    border-radius: 10px;
     display: flex;
     flex-direction: column;
+    padding: 10px;
 }
 
 .consult-section-page-2-2 {
-    width: 70%;
-    height: auto;
-    border: 4px solid black;
+    width: auto;
+    /*width: 100%;*/
+    height: 100%;
+    /*border: 4px solid black;*/
+    border-style: inset;
+    border-radius: 10px;
     /*border-top: 3px outset gray; !* Aplica borda somente na parte superior *!*/
     display: flex;
     flex-direction: column;
