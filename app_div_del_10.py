@@ -88,7 +88,7 @@ app.layout = html.Div(children=[
     Output(component_id="cards-container", component_property="children"),
     Input(component_id="cenarios-store", component_property="data")
 )
-def update_cards(cenarios):
+def update_cards(cenarios: list[dict]):
 
     agrupado = agrupar_por_chave(lista=cenarios, chave="cenario")
     cards = []

@@ -220,10 +220,10 @@ def listar_colecoes(value):
      Input(component_id='id-colecoes-radio', component_property='value')],  # State para coleção de Eólicas
 )
 def listar_colecoes(db_name, colecoes_div, collection):
+
     # Debug -------------------------------------------------------------------------------------------------------
     # print(f"db_name: {db_name}")  # Debug
     # print(f"colecoes_div: {colecoes_div}")
-
     # print(f"collection: {collection}")  # Debug
 
     if collection:
@@ -245,10 +245,11 @@ def listar_colecoes(db_name, colecoes_div, collection):
 
             for grupo, itens in agrupado.items():
                 div: html.Div = html.Div(children=[
+                    # Div com o título do grupo
                     dmc.Stack([
                         dmc.Divider(label=grupo,
                                     color="lightgray",
-                                    labelPosition="center",
+                                    labelPosition="left",
                                     size="md",
                                     style={
                                         'fontWeight': 'bold',
@@ -258,14 +259,22 @@ def listar_colecoes(db_name, colecoes_div, collection):
                                         'marginBottom': '10px',
                                         'color': 'gray',
                                     })]),
+                    # Div com o botão de exclusão
+                    html.Div([
+                        dbc.Button(children=["🗑️"], n_clicks=0,
+                                   className="delete-button-cenarios",
+                                   id={"type": "delete-button", "index": collection["_id"]}
+                                   ),
+                    ]),
 
+                    # Div com os cards
                     html.Div([render_card(cenario=item) for item in itens], style={'display': 'flex',
                                                                                    'flexDirection': 'column',
-                                                                                   'border': '1px solid gold',
+                                                                                   # 'border': '1px solid gold',
                                                                                    'padding': '10px',
                                                                                    'marginBottom': '10px', })
                 ], style={
-                    'border': '1px solid red',
+                    # 'border': '1px solid red',
                     'marginBottom': '10px',
                 })
                 # print(grupo)  # debug Cenário 1, Cenário 2, etc
@@ -280,23 +289,41 @@ def listar_colecoes(db_name, colecoes_div, collection):
         return "Nenhuma coleção selecionada."
 
 
+# 3) Callback para importar os documentos do banco de dados e salvar no dcc.Store --------------------------------------
+
+
+
+
+
+
+
+
+
 # TODO: Implementar a exclusão de documentos no banco de dados, igual ao arquivo app_div_del_10.py
+
+
+
+
 
 
 
 # Executar o app
 if __name__ == "__main__":
-    pass
-    # colecao = "SPE Ventos da Serra"
-    # cliente, crud = conectar_ao_banco(collection_name=colecao, database_name="Eólicas")
-    # # print(crud.list_collections())  # debug
-    # filtro: dict = {"empresa": colecao}
-    # projecao = {"_id": 1, "nome": 1, "descricao": 1, "data": 1, "empresa": 1, "tipo": 1, "parte": 1, "setor": 1}
-    # response: list[dict] = crud.select_many_documents(query=filtro, projection=projecao)
-    # # print(response)  # debug
+
+    colecao = "SPE Ventos da Serra"
+    cliente, crud = conectar_ao_banco(collection_name=colecao, database_name="Eólicas")
+    # print(crud.list_collections())  # debug
+    filtro: dict = {"empresa": colecao}
+    projecao = {"_id": 1, "nome": 1, "descricao": 1, "data": 1, "empresa": 1, "tipo": 1, "parte": 1, "setor": 1}
+    response: list[dict] = crud.select_many_documents(query=filtro, projection=projecao)
+
+    print(response)  # debug
+
     # agrupado = agrupar_por_chave(lista=response, chave="nome")
     # # Debug agrupado --------------------------------------------------------------------------------------------------
     # print(agrupado)
+
+    pass
 
 
 

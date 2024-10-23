@@ -157,7 +157,7 @@ def render_card(cenario) -> dbc.Card:
                                                    'fontSize': '14px',
                                                    'borderBottom': '0.5px solid gray',
                                                    # 'paddingBottom': '5px',
-                                                   'marginTop': '5px',}),
+                                                   'marginTop': '1px',}),
 
             # Div com o título, parte, empresa, data e tipo
             html.Div(children=[
