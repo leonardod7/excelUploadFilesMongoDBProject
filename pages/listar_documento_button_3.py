@@ -23,7 +23,7 @@ collection_hidro_base_name: str = "UHE 1"
 # Funções --------------------------------------------------------------------------------------------------------------
 
 # Função para gerar a lista de cards -----------------------------------------------------------------------------------
-def gerar_lista_cards(agrupado_formatado):
+def gerar_lista_cards(agrupado_formatado) -> list[html.Div]:
     cards = []
 
     for grupo, itens in agrupado_formatado.items():
@@ -46,7 +46,7 @@ def gerar_lista_cards(agrupado_formatado):
             html.Div([
                 dbc.Button(children=["🗑️"], n_clicks=0,
                            className="delete-button-cenarios",
-                           # id={"type": "delete-button", "index": agrupado_formatado["_id"]}
+                           # id={"type": "delete-button", "index": agrupado_formatado['Cenários']}
                            ),
             ]),
 
@@ -65,6 +65,30 @@ def gerar_lista_cards(agrupado_formatado):
         cards.append(div)  # Título do grupo
 
     return cards
+
+def criar_cenarios(dicionario: dict[list[dict]]) -> dict[dict:list[dict]]:
+    # Criar um novo dicionário com a chave "Cenários"
+    cenarios = {"Cenários": dicionario}
+    return cenarios
+
+def json_deserial(data):
+    # Verifica se 'data' é um dicionário que contém cenários
+    if isinstance(data, dict) and 'Cenários' in data:
+        for cenario, documentos in data['Cenários'].items():
+            # Verifica se 'documentos' é uma lista
+            if isinstance(documentos, list):
+                for doc in documentos:
+                    for key, value in doc.items():
+                        # Converte strings que representam ObjectId de volta ao formato ObjectId
+                        if key == '_id' and isinstance(value, str):
+                            doc[key] = ObjectId(value)
+                        # Converte strings ISO de volta para datetime
+                        elif isinstance(value, str) and 'T' in value and ':' in value:
+                            try:
+                                doc[key] = datetime.fromisoformat(value)
+                            except ValueError:
+                                pass  # Ignora erros de conversão
+    return data
 
 
 # 2) Página de consultar documentos ------------------------------------------------------------------------------------
@@ -185,12 +209,19 @@ def upload_data_from_mongo_to_store(db_name, colecoes_div, collection):
 
         try:
             response: list[dict] = crud.select_many_documents(query=filtro, projection=projecao)
-            print(response)
+            # print('response')
+            # print(response)
+            # 1.2) Agrupando lista de dicionarios por nome
+            agrupado = agrupar_por_chave(lista=response, chave="nome")
 
-            # Vamos converter para o formato json, pois apenas assim conseguiremos armazenar no dcc.Store
-            json_data = json.dumps(response, default=json_serial)
-            # print('json data armazenado no dcc.Store: id-cenarios-store')  # debug
-            # print(json_data)  # debug
+            # 1.3) Cria dicionário para ser utilizado na estrutura do dcc.Store
+            cenarios: dict[dict:list[dict]] = criar_cenarios(agrupado)
+
+            # 1.4) Converte dicionário em JSON para ser armazenado em um dcc.Store
+            json_cenarios = json.dumps(cenarios, default=str) # Dados que serão armazenados no dcc.Store
+
+            print('json data armazenado no dcc.Store: id-cenarios-store')  # debug
+            # print(json_cenarios)  # debug
 
         finally:
             cliente.close_connection()
@@ -198,7 +229,7 @@ def upload_data_from_mongo_to_store(db_name, colecoes_div, collection):
     else:
         return "Nenhuma coleção selecionada."
 
-    return json_data
+    return json_cenarios
 
 
 # 3.2) Callback para listar apenas o nome das coleções com cache com Radio Items ---------------------------------------
@@ -316,20 +347,12 @@ def listar_colecoes_radio_items(value):
     Input(component_id="id-cenarios-store", component_property="data")
 )
 def mostrar_cards_colecoes(cenarios: list[dict]):
-    # 1) Vamos pegar os documentos em formato json que estão no dcc.Store e convertê-los para o formato desserializado
-    # print('Dados Json Serealizados')
-    # print(cenarios) # debug
 
-    dados_originais = custom_json_decoder(cenarios)
+    data_store = json.loads(cenarios)
+    data_final: dict[dict:list[dict]] = json_deserial(data_store)  # Dados que serão utilizados
 
-    # print('Dados Originais')
-    # print(dados_originais) # debug
-
-    agrupado = agrupar_por_chave(lista=dados_originais, chave="nome")
-    agrupado_formatado: dict[list[dict]] = aplicar_formato_data(agrupado)
-    print('Agrupado Formatado')
-    print(agrupado_formatado)
-    cards = gerar_lista_cards(agrupado_formatado)
+    cards: list[html.Div] = gerar_lista_cards(data_final['Cenários'])
+    print(data_final['Cenários'])
 
     return cards
 
@@ -337,159 +360,20 @@ def mostrar_cards_colecoes(cenarios: list[dict]):
 # 3.4) Callback para deletar um documento do banco de dados ------------------------------------------------------------
 # Vamos excluir os documentos com base nos ids que pertencem a um mesmo cenário
 # @callback(Output(component_id="id-cenarios-store", component_property="data"),
-#           Input(component_id=))
+#           Input(component_id={"type": "delete-button", "index": ALL}, component_property="n_clicks"),
+#           State(component_id="cenarios-store", component_property="data"),
 
 
-agrupado_formatado: dict[list[dict]] = {'Cenário 2':
-    [
-        {'_id': ObjectId('67111516808999e3b2900018'),
-         'nome': 'Cenário 2',
-         'descricao': 'Cenário de venda de parques solares + 5%',
-         'data': '17/10/2024 10:45:57',
-         'setor': 'solar',
-         'empresa': 'Parque Solar 1',
-         'tipo': 'dre',
-         'parte': 1},
-        {'_id': ObjectId('67111516808999e3b2900019'),
-         'nome': 'Cenário 2',
-         'descricao': 'Cenário de venda de parques solares + 5%',
-         'data': '17/10/2024 10:45:57',
-         'setor': 'solar',
-         'empresa': 'Parque Solar 1',
-         'tipo': 'dre',
-         'parte': 2},
-        {'_id': ObjectId('67111516808999e3b290001a'),
-         'nome': 'Cenário 2',
-         'descricao': 'Cenário de venda de parques solares + 5%',
-         'data': '17/10/2024 10:45:57',
-         'setor': 'solar',
-         'empresa': 'Parque Solar 1',
-         'tipo': 'dre',
-         'parte': 3},
-        {'_id': ObjectId('67111516808999e3b290001b'),
-         'nome': 'Cenário 2',
-         'descricao': 'Cenário de venda de parques solares + 5%',
-         'data': '17/10/2024 10:45:58',
-         'setor': 'solar',
-         'empresa': 'Parque Solar 1',
-         'tipo': 'dre',
-         'parte': 4}
-    ],
-    'Cenário 1': [
-        {'_id': ObjectId('6711153207ea80384ddb82e5'),
-         'nome': 'Cenário 1',
-         'descricao': 'Cenário de venda de parques solares + 5%',
-         'data': '17/10/2024 10:46:25',
-         'setor': 'solar',
-         'empresa': 'Parque Solar 1',
-         'tipo': 'dre',
-         'parte': 1},
-        {'_id': ObjectId('6711153207ea80384ddb82e6'),
-         'nome': 'Cenário 1',
-         'descricao': 'Cenário de venda de parques solares + 5%',
-         'data': '17/10/2024 10:46:25',
-         'setor': 'solar',
-         'empresa': 'Parque Solar 1',
-         'tipo': 'dre',
-         'parte': 2},
-        {'_id': ObjectId('6711153207ea80384ddb82e7'),
-         'nome': 'Cenário 1',
-         'descricao': 'Cenário de venda de parques solares + 5%',
-         'data': '17/10/2024 10:46:25',
-         'setor': 'solar',
-         'empresa': 'Parque Solar 1',
-         'tipo': 'dre',
-         'parte': 3},
-        {'_id': ObjectId('6711153207ea80384ddb82e8'),
-         'nome': 'Cenário 1',
-         'descricao': 'Cenário de venda de parques solares + 5%',
-         'data': '17/10/2024 10:46:25',
-         'setor': 'solar',
-         'empresa': 'Parque Solar 1',
-         'tipo': 'dre',
-         'parte': 4},
-        {'_id': ObjectId('6711158485d1d4c8dfd8fce3'),
-         'nome': 'Cenário 1',
-         'descricao': 'Cenário de venda de parques solares + 5%',
-         'data': '17/10/2024 10:47:48',
-         'setor': 'solar',
-         'empresa': 'Parque Solar 1',
-         'tipo': 'bp',
-         'parte': 1},
-        {'_id': ObjectId('6711158485d1d4c8dfd8fce4'),
-         'nome': 'Cenário 1',
-         'descricao': 'Cenário de venda de parques solares + 5%',
-         'data': '17/10/2024 10:47:48',
-         'setor': 'solar',
-         'empresa': 'Parque Solar 1',
-         'tipo': 'bp',
-         'parte': 2},
-        {'_id': ObjectId('6711158585d1d4c8dfd8fce5'),
-         'nome': 'Cenário 1',
-         'descricao': 'Cenário de venda de parques solares + 5%',
-         'data': '17/10/2024 10:47:48',
-         'setor': 'solar',
-         'empresa': 'Parque Solar 1',
-         'tipo': 'bp',
-         'parte': 3},
-        {'_id': ObjectId('6711158585d1d4c8dfd8fce6'),
-         'nome': 'Cenário 1',
-         'descricao': 'Cenário de venda de parques solares + 5%',
-         'data': '17/10/2024 10:47:48',
-         'setor': 'solar',
-         'empresa': 'Parque Solar 1',
-         'tipo': 'bp',
-         'parte': 4}]}
 
-# TODO: precisamos de alguma forma criar um identificador para cada nome de chave acima. Por exemplo, temos
-# 'Cenáro 1' e 'Cenário 2'. Precisamos de um identificador para cada um deles. Pode ser o próprio nome da chave mais
-# um número. Por exemplo, 'Cenário 1' -> 'Cenário 1_1', 'Cenário 1_2', 'Cenário 1_3', 'Cenário 1_4'. O mesmo para
-# 'Cenário 2'. Dessa forma, podemos identificar cada um dos cenários e deletar todos os documentos que pertencem a
-# cada um deles. Talvez esse processo de criar um identificador seja necessário ser feito ao salvar os dados no dcc.Store
-# Podemos criar no mesmo nível que a chave 'Cenário 2'por exmeplo, outra chave com um código único para cada cenário.
-# A partir desse nome de chave, acessamos ela e deletamos todos os documentos que pertencem a ela. A necessidade de criar uma chave é para não corrermos
-# o risco de se tivermos dois nomes iguais de cenário não excluirmos os outros. Exemplo:
+# TODO: no momento de inserção de documentos, deveremos ter uma verificação para ver se já existe um cenário com o mesmo
+#  nome que está sendo inserido. Se existir, uma mensagem de alerta é mostrada para o usuário pedindo para ele
+#  renomear o cenário. Se ele não renomear, não será possível inserir o cenário.
+
+# TODO: Os documentos dos cenários agora pertence a uma chave chama "Cenários". Dentro dessa chave, temos os cenários (Cenário 1, Cenário 2 etc).
+# TODO: Precisamos pensar na lógica agora de ao apertar o botão de deletar, ele identificar a qual cenário foi clicado e deletar todos os documentos
+# Delete: nosso botão de delete terá um id: id={"type": "delete-button", "index": agrupado_formatado['Cenários']}
 
 
-agrupado_formatado: dict[list[dict]] = {
-    'Cenário 2': {
-        'id': '550e8400-e29b-41d4-a716-446655440000',
-        'partes':
-            [
-                {'_id': ObjectId('67111516808999e3b2900018'),
-                 'nome': 'Cenário 2',
-                 'descricao': 'Cenário de venda de parques solares + 5%',
-                 'data': '17/10/2024 10:45:57',
-                 'setor': 'solar',
-                 'empresa': 'Parque Solar 1',
-                 'tipo': 'dre',
-                 'parte': 1},
-                {'_id': ObjectId('67111516808999e3b2900019'),
-                 'nome': 'Cenário 2',
-                 'descricao': 'Cenário de venda de parques solares + 5%',
-                 'data': '17/10/2024 10:45:57',
-                 'setor': 'solar',
-                 'empresa': 'Parque Solar 1',
-                 'tipo': 'dre',
-                 'parte': 2},
-                {'_id': ObjectId('67111516808999e3b290001a'),
-                 'nome': 'Cenário 2',
-                 'descricao': 'Cenário de venda de parques solares + 5%',
-                 'data': '17/10/2024 10:45:57',
-                 'setor': 'solar',
-                 'empresa': 'Parque Solar 1',
-                 'tipo': 'dre',
-                 'parte': 3},
-                {'_id': ObjectId('67111516808999e3b290001b'),
-                 'nome': 'Cenário 2',
-                 'descricao': 'Cenário de venda de parques solares + 5%',
-                 'data': '17/10/2024 10:45:58',
-                 'setor': 'solar',
-                 'empresa': 'Parque Solar 1',
-                 'tipo': 'dre',
-                 'parte': 4}
-            ]}
-}
 
 # Executar o app
 if __name__ == "__main__":
@@ -506,4 +390,103 @@ if __name__ == "__main__":
     # # Debug agrupado --------------------------------------------------------------------------------------------------
     # print(agrupado)
 
-    pass
+    agrupado_formatado: dict[list[dict]] = {'Cenário 2':
+        [
+            {'_id': ObjectId('67111516808999e3b2900018'),
+             'nome': 'Cenário 2',
+             'descricao': 'Cenário de venda de parques solares + 5%',
+             'data': '17/10/2024 10:45:57',
+             'setor': 'solar',
+             'empresa': 'Parque Solar 1',
+             'tipo': 'dre',
+             'parte': 1},
+            {'_id': ObjectId('67111516808999e3b2900019'),
+             'nome': 'Cenário 2',
+             'descricao': 'Cenário de venda de parques solares + 5%',
+             'data': '17/10/2024 10:45:57',
+             'setor': 'solar',
+             'empresa': 'Parque Solar 1',
+             'tipo': 'dre',
+             'parte': 2},
+            {'_id': ObjectId('67111516808999e3b290001a'),
+             'nome': 'Cenário 2',
+             'descricao': 'Cenário de venda de parques solares + 5%',
+             'data': '17/10/2024 10:45:57',
+             'setor': 'solar',
+             'empresa': 'Parque Solar 1',
+             'tipo': 'dre',
+             'parte': 3},
+            {'_id': ObjectId('67111516808999e3b290001b'),
+             'nome': 'Cenário 2',
+             'descricao': 'Cenário de venda de parques solares + 5%',
+             'data': '17/10/2024 10:45:58',
+             'setor': 'solar',
+             'empresa': 'Parque Solar 1',
+             'tipo': 'dre',
+             'parte': 4}
+        ],
+        'Cenário 1': [
+            {'_id': ObjectId('6711153207ea80384ddb82e5'),
+             'nome': 'Cenário 1',
+             'descricao': 'Cenário de venda de parques solares + 5%',
+             'data': '17/10/2024 10:46:25',
+             'setor': 'solar',
+             'empresa': 'Parque Solar 1',
+             'tipo': 'dre',
+             'parte': 1},
+            {'_id': ObjectId('6711153207ea80384ddb82e6'),
+             'nome': 'Cenário 1',
+             'descricao': 'Cenário de venda de parques solares + 5%',
+             'data': '17/10/2024 10:46:25',
+             'setor': 'solar',
+             'empresa': 'Parque Solar 1',
+             'tipo': 'dre',
+             'parte': 2},
+            {'_id': ObjectId('6711153207ea80384ddb82e7'),
+             'nome': 'Cenário 1',
+             'descricao': 'Cenário de venda de parques solares + 5%',
+             'data': '17/10/2024 10:46:25',
+             'setor': 'solar',
+             'empresa': 'Parque Solar 1',
+             'tipo': 'dre',
+             'parte': 3},
+            {'_id': ObjectId('6711153207ea80384ddb82e8'),
+             'nome': 'Cenário 1',
+             'descricao': 'Cenário de venda de parques solares + 5%',
+             'data': '17/10/2024 10:46:25',
+             'setor': 'solar',
+             'empresa': 'Parque Solar 1',
+             'tipo': 'dre',
+             'parte': 4},
+            {'_id': ObjectId('6711158485d1d4c8dfd8fce3'),
+             'nome': 'Cenário 1',
+             'descricao': 'Cenário de venda de parques solares + 5%',
+             'data': '17/10/2024 10:47:48',
+             'setor': 'solar',
+             'empresa': 'Parque Solar 1',
+             'tipo': 'bp',
+             'parte': 1},
+            {'_id': ObjectId('6711158485d1d4c8dfd8fce4'),
+             'nome': 'Cenário 1',
+             'descricao': 'Cenário de venda de parques solares + 5%',
+             'data': '17/10/2024 10:47:48',
+             'setor': 'solar',
+             'empresa': 'Parque Solar 1',
+             'tipo': 'bp',
+             'parte': 2},
+            {'_id': ObjectId('6711158585d1d4c8dfd8fce5'),
+             'nome': 'Cenário 1',
+             'descricao': 'Cenário de venda de parques solares + 5%',
+             'data': '17/10/2024 10:47:48',
+             'setor': 'solar',
+             'empresa': 'Parque Solar 1',
+             'tipo': 'bp',
+             'parte': 3},
+            {'_id': ObjectId('6711158585d1d4c8dfd8fce6'),
+             'nome': 'Cenário 1',
+             'descricao': 'Cenário de venda de parques solares + 5%',
+             'data': '17/10/2024 10:47:48',
+             'setor': 'solar',
+             'empresa': 'Parque Solar 1',
+             'tipo': 'bp',
+             'parte': 4}]}

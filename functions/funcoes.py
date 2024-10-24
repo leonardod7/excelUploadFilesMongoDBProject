@@ -2,6 +2,7 @@ from datetime import datetime
 import pandas as pd
 import dash_bootstrap_components as dbc
 from dash import dcc, html
+import dash_mantine_components as dmc
 
 from dao.MongoCRUD import MongoDBCRUD
 from model.MongoConnection import MongoEolicasConnection, MongoSolarConnection, MongoHidroConnection
@@ -271,3 +272,5 @@ def aplicar_formato_data(documento):
             if 'data' in entrada and isinstance(entrada['data'], datetime):
                 entrada['data'] = formatar_data_brasileira(entrada['data'])
     return documento
+
+

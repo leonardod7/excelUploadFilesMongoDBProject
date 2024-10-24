@@ -1,7 +1,7 @@
 # Importando as bibliotecas --------------------------------------------------------------------------------------------
 from dash import html, Input, Output, State, dash, dcc, page_registry, _dash_renderer
 import dash_mantine_components as dmc
-from pages.listar_documento_button_2 import consultar_documentos_page
+from pages.listar_documento_button_3 import consultar_documentos_page
 _dash_renderer._set_react_version("18.2.0")
 
 # Importando componentes do app ----------------------------------------------------------------------------------------
@@ -18,7 +18,7 @@ app.layout = dmc.MantineProvider(
                  navbar(),
 
                  # Store na aplicação como um todo
-                 # dcc.Store(id='id-data-cenarios-input-store', storage_type='session'),
+                 dcc.Store(id="id-cenarios-store"),  # Armazenando os cenários
 
                  # Container de páginas
                  dcc.Location(id='url', refresh=False),
