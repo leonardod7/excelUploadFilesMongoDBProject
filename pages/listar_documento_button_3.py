@@ -2,7 +2,7 @@ from datetime import datetime
 
 from bson import ObjectId
 from datetime import datetime
-from dash import dcc, html, Input, Output, State, callback, ALL, no_update
+from dash import dcc, html, Input, Output, State, callback, ALL, no_update, callback_context
 from app import cache  # Importar o cache configurado
 import dash_bootstrap_components as dbc
 from dash.exceptions import PreventUpdate
@@ -23,10 +23,13 @@ collection_hidro_base_name: str = "UHE 1"
 # Funções --------------------------------------------------------------------------------------------------------------
 
 # Função para gerar a lista de cards -----------------------------------------------------------------------------------
-def gerar_lista_cards(agrupado_formatado) -> list[html.Div]:
+def gerar_lista_cards(agrupado_formatado: dict[list[dict]],
+                      agrupado_formatado_cenarios: dict[list[dict]]) -> list[html.Div]:
     cards = []
 
     for grupo, itens in agrupado_formatado.items():
+        # print(grupo)  # debug Cenário 1, Cenário 2, etc
+
         div: html.Div = html.Div(children=[
             # Div com o título do grupo
             dmc.Stack([
@@ -42,11 +45,12 @@ def gerar_lista_cards(agrupado_formatado) -> list[html.Div]:
                                 'marginBottom': '10px',
                                 'color': 'gray',
                             })]),
+
             # Div com o botão de exclusão
             html.Div([
                 dbc.Button(children=["🗑️"], n_clicks=0,
                            className="delete-button-cenarios",
-                           # id={"type": "delete-button", "index": agrupado_formatado['Cenários']}
+                           id={"type": "delete-button", "index": grupo}
                            ),
             ]),
 
@@ -66,10 +70,12 @@ def gerar_lista_cards(agrupado_formatado) -> list[html.Div]:
 
     return cards
 
+
 def criar_cenarios(dicionario: dict[list[dict]]) -> dict[dict:list[dict]]:
     # Criar um novo dicionário com a chave "Cenários"
     cenarios = {"Cenários": dicionario}
     return cenarios
+
 
 def json_deserial(data):
     # Verifica se 'data' é um dicionário que contém cenários
@@ -88,6 +94,14 @@ def json_deserial(data):
                                 doc[key] = datetime.fromisoformat(value)
                             except ValueError:
                                 pass  # Ignora erros de conversão
+    return data
+
+
+def stringify_object_ids(data):
+    for cenario, docs in data.items():
+        for doc in docs:
+            if '_id' in doc and isinstance(doc['_id'], ObjectId):
+                doc['_id'] = str(doc['_id'])
     return data
 
 
@@ -218,10 +232,10 @@ def upload_data_from_mongo_to_store(db_name, colecoes_div, collection):
             cenarios: dict[dict:list[dict]] = criar_cenarios(agrupado)
 
             # 1.4) Converte dicionário em JSON para ser armazenado em um dcc.Store
-            json_cenarios = json.dumps(cenarios, default=str) # Dados que serão armazenados no dcc.Store
+            json_cenarios = json.dumps(cenarios, default=str)  # Dados que serão armazenados no dcc.Store
 
             print('json data armazenado no dcc.Store: id-cenarios-store')  # debug
-            # print(json_cenarios)  # debug
+            print(json_cenarios)  # debug
 
         finally:
             cliente.close_connection()
@@ -346,23 +360,122 @@ def listar_colecoes_radio_items(value):
     Output(component_id="id-consult-section-page-2-2-1", component_property="children"),
     Input(component_id="id-cenarios-store", component_property="data")
 )
-def mostrar_cards_colecoes(cenarios: list[dict]):
-
+def mostrar_cards_colecoes(cenarios: dict[dict:list[dict]]):
     data_store = json.loads(cenarios)
     data_final: dict[dict:list[dict]] = json_deserial(data_store)  # Dados que serão utilizados
+    data_final_cenarios: dict[list[dict]] = data_final['Cenários']
 
-    cards: list[html.Div] = gerar_lista_cards(data_final['Cenários'])
-    print(data_final['Cenários'])
+    # print('Agrupado formatado: ')
+    # print(data_final)
+    # print('Cenários: ')
+    # print(data_final_cenarios)
+
+    cards: list[html.Div] = gerar_lista_cards(agrupado_formatado=data_final_cenarios,
+                                              agrupado_formatado_cenarios=data_final)
 
     return cards
 
 
 # 3.4) Callback para deletar um documento do banco de dados ------------------------------------------------------------
 # Vamos excluir os documentos com base nos ids que pertencem a um mesmo cenário
-# @callback(Output(component_id="id-cenarios-store", component_property="data"),
-#           Input(component_id={"type": "delete-button", "index": ALL}, component_property="n_clicks"),
-#           State(component_id="cenarios-store", component_property="data"),
+@callback(Output(component_id="id-cenarios-store", component_property="data", allow_duplicate=True),
+          Input(component_id={"type": "delete-button", "index": ALL}, component_property="n_clicks"),
+          State(component_id="id-cenarios-store", component_property="data"),
+          prevent_initial_call=True)
+def deletar_documento(n_clicks, data):
 
+    # print('Debug: -----')
+    # print('Data: ----- debug')
+    # print(data)
+
+    # 1) Vamos importar os dados do dcc.Store
+    data_store = json.loads(data)
+
+    # 2) Desserializar os dados
+    data_final: dict[dict:list[dict]] = json_deserial(data_store)  # Dados que serão utilizados
+    # print(data_final)
+
+    # 3) Vamos criar um dicionário com o nome das chaves e seus respectivos ids
+    dict_ids = {}
+    for cenario, docs in data_final['Cenários'].items():
+        dict_ids[cenario] = [doc['_id'] for doc in docs]
+
+
+    # 4) Vamos verificar qual botão foi clicado e a qual chave ele pertence. Com base nessa chave,
+    # vamos deletar todos os documentos que que estão associados a ela no dict ids
+    ctx = callback_context
+    if not ctx.triggered or not n_clicks or all(click is None for click in n_clicks):
+        raise PreventUpdate
+
+    # Identifica o botão clicado com o nome da chave (Cenário 1, Cenário 2 etc)
+    btn_id = ctx.triggered[0]['prop_id'].split('.')[0]
+    # print('btn_id: ', btn_id)  # btn_id:  {"index":"Cenário 1","type":"delete-button"}
+    btn_id = eval(btn_id)  # Converte a string de volta ao dicionário
+    # print('btn_id: ', btn_id)  # {'index': 'Cenário 1', 'type': 'delete-button'}
+
+    cenario_nome = btn_id['index']
+    print('Cenário Nome: ', cenario_nome)  # Cenário Nome:  Cenário 1
+
+    # TODO: o código abaixo está quase 200%. Precisamos apenas incluir o banco e coleção de forma automáticas.
+    # # 5) Vamos deletar todos os documentos que estão associados a essa chave. Vamos acessar primeiro para cada id do
+    # # cenario selecionado, rodaremos um delete no mongo db
+    #
+    # # 5.1) Conectar ao banco de dados
+    #
+    # banco_name = ""
+    # colecao_name = ""
+    # cliente, crud = conectar_ao_banco(collection_name=colecao_name, database_name=banco_name)
+    #
+    # # 5.2) Deletar os documentos
+    # for id_ in dict_ids[cenario_nome]:
+    #     filtro = {"_id": id_}
+    #     crud.delete_one_document(filtro)
+    #
+    # # 5.3) Fechar a conexão
+    # cliente.close_connection()
+    #
+    # # 6) Precisamos agora deletar todos os documentos com os ids que estão associados a essa chave do data_final
+    #
+    # # 6.1) Vamos deletar a chave do dicionário
+    # data_final_copy = data_final.copy()
+    #
+    # if cenario_nome in data_final_copy['Cenários']:
+    #     del data_final_copy['Cenários'][cenario_nome]
+    #
+    # # 6.2) Vamos retornar os dados atualizados
+    #
+    # return data_final_copy
+
+    return None
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    # ctx = callback_context
+    # if not ctx.triggered:
+    #     raise PreventUpdate
+    #
+    # # Identifica o botão clicado
+    # btn_id = ctx.triggered[0]['prop_id'].split('.')[0]
+    # btn_id = eval(btn_id)  # Converte a string de volta ao dicionário
+    #
+    # # Remove o cenário correspondente ao botão clicado
+    # cenario_nome = btn_id['index']
+    # if cenario_nome in data_final:
+    #     del data_final[cenario_nome]
+
+    # Retorna o layout atualizado e o novo estado do dcc.Store
+    return None
 
 
 # TODO: no momento de inserção de documentos, deveremos ter uma verificação para ver se já existe um cenário com o mesmo
@@ -372,7 +485,6 @@ def mostrar_cards_colecoes(cenarios: list[dict]):
 # TODO: Os documentos dos cenários agora pertence a uma chave chama "Cenários". Dentro dessa chave, temos os cenários (Cenário 1, Cenário 2 etc).
 # TODO: Precisamos pensar na lógica agora de ao apertar o botão de deletar, ele identificar a qual cenário foi clicado e deletar todos os documentos
 # Delete: nosso botão de delete terá um id: id={"type": "delete-button", "index": agrupado_formatado['Cenários']}
-
 
 
 # Executar o app

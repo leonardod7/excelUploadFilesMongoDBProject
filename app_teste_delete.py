@@ -20,6 +20,7 @@ cenarios = {
     }
 }
 
+
 # Função para renderizar as divs dos cenários
 def render_cenarios(cenarios_dict):
     cenarios_divs = []
@@ -47,6 +48,9 @@ app.layout = html.Div([
 )
 def deletar_cenario(n_clicks, data):
     ctx = dash.callback_context
+    print('Contexto: -------------------')
+    print(ctx.triggered)
+
     if not ctx.triggered or not any(n_clicks):
         return render_cenarios(data)
 
