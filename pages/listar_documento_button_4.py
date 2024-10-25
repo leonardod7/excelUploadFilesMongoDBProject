@@ -12,6 +12,7 @@ from functions.serealizar import json_serial, custom_json_decoder
 import dash_mantine_components as dmc
 import json
 
+
 from functions.serealizar import dados_nao_serealizados
 
 # 1) Dados iniciais das coleções ---------------------------------------------------------------------------------------
@@ -201,7 +202,7 @@ def consultar_documentos_page():
     Output(component_id='id-cenarios-store', component_property='data'),
     [Input(component_id='id-radio-items-bancos', component_property='value'),  # Input para o banco de dados
      Input(component_id='id-div-colecoes', component_property='children'),  # Input para as coleções
-     Input(component_id='id-colecoes-radio', component_property='value')],  # State para coleção de Eólicas
+     Input(component_id='id-colecoes-radio', component_property='value')],
 )
 def upload_data_from_mongo_to_store(db_name, colecoes_div, collection):
     if collection:
@@ -226,8 +227,8 @@ def upload_data_from_mongo_to_store(db_name, colecoes_div, collection):
             # 1.4) Converte dicionário em JSON para ser armazenado em um dcc.Store
             json_cenarios = json.dumps(cenarios, default=str)  # Dados que serão armazenados no dcc.Store
 
-            print('json data armazenado no dcc.Store: id-cenarios-store')  # debug
-            print(json_cenarios)  # debug
+            # print('json data armazenado no dcc.Store: id-cenarios-store')  # debug
+            # print(json_cenarios)  # debug
 
         finally:
             cliente.close_connection()
@@ -372,34 +373,34 @@ def mostrar_cards_colecoes(cenarios: dict[dict:list[dict]]):
 # Vamos excluir os documentos com base nos ids que pertencem a um mesmo cenário
 @callback(Output(component_id="id-cenarios-store", component_property="data", allow_duplicate=True),
           Input(component_id={"type": "delete-button", "index": ALL}, component_property="n_clicks"),
-          State(component_id="id-cenarios-store", component_property="data"),
-          prevent_initial_call=True)
-def deletar_documento(n_clicks, data):
+          Input(component_id='id-colecoes-radio', component_property='value'),
+          Input(component_id='id-radio-items-bancos', component_property='value'),
+          Input(component_id='id-div-colecoes', component_property='children'),
+          State(component_id="id-cenarios-store", component_property="data"), prevent_initial_call=True)
+def deletar_documento(n_clicks, colecao, bancos, colecoes_div, data):
 
     # print('Debug: -----')
     # print('Data: ----- debug')
     # print(data)
+    print('Coleção: ', colecao)
+    print('Bancos: ', bancos)
 
-    # 1) Vamos importar os dados do dcc.Store
-    data_store = json.loads(data)
+    # TODO: Precisamos criar uma condição para verificar se o usuário clicou em um botão de exclusão, ou mudou o banco ou
+    #  a coleção. Se ele mudou o banco ou a coleção, não podemos deletar os documentos. Precisamos criar uma condição. Esse
+    # é o motivo do erro que está acontecendo.
 
-    # 2) Desserializar os dados
-    data_final: dict[dict:list[dict]] = json_deserial(data_store)  # Dados que serão utilizados
-    # print(data_final)
-
-    # 3) Vamos criar um dicionário com o nome das chaves e seus respectivos ids
-    dict_ids = {}
-    for cenario, docs in data_final['Cenários'].items():
-        dict_ids[cenario] = [doc['_id'] for doc in docs]
+    # TODO: Ver o que foi feito no app neural finance que é semelhante ao que precisamos de botão acionado.
 
 
-    # 4) Vamos verificar qual botão foi clicado e a qual chave ele pertence. Com base nessa chave,
-    # vamos deletar todos os documentos que que estão associados a ela no dict ids
+
+    # 1) Vamos verificar qual botão foi clicado e a qual chave ele pertence. Com base nessa chave,
     ctx = callback_context
-    if not ctx.triggered or not n_clicks or all(click is None for click in n_clicks):
-        raise PreventUpdate
+    print('Triggered context: ', ctx.triggered)  # Adicionado para depuração Triggered context:  [{'prop_id': 'id-radio-items-bancos.value', 'value': 'Solar'}, {'prop_id': 'id-div-colecoes.children', 'value': {'props': {'options': [{'label': {'props': {'children': [{'props': {'children': None, 'src': '/assets/img/database.png', 'style': {'width': '20px', 'height': '20px', 'marginRight': '10px'}}, 'type': 'Img', 'namespace': 'dash_html_components'}, 'Parque Solar 1']}, 'type': 'Span', 'namespace': 'dash_html_components'}, 'value': 'Parque Solar 1'}, {'label': {'props': {'children': [{'props': {'children': None, 'src': '/assets/img/database.png', 'style': {'width': '20px', 'height': '20px', 'marginRight': '10px'}}, 'type': 'Img', 'namespace': 'dash_html_components'}, 'Parque Solar 2']}, 'type': 'Span', 'namespace': 'dash_html_components'}, 'value': 'Parque Solar 2'}], 'value': 'Parque Solar 1', 'style': {'fontWeight': 'bold', 'fontFamily': 'Arial Narrow', 'fontSize': '14px'}, 'className': 'custom-radio-items', 'id': 'id-colecoes-radio'}, 'type': 'RadioItems', 'namespace': 'dash_core_components'}}, {'prop_id': 'id-colecoes-radio.value', 'value': 'Parque Solar 1'}]
+    # if not ctx.triggered or not n_clicks or all(click is None for click in n_clicks):
+    if not ctx.triggered:
+        return data
 
-    # Identifica o botão clicado com o nome da chave (Cenário 1, Cenário 2 etc)
+    # 2) Identifica o botão clicado com o nome da chave (Cenário 1, Cenário 2 etc)
     btn_id = ctx.triggered[0]['prop_id'].split('.')[0]
     # print('btn_id: ', btn_id)  # btn_id:  {"index":"Cenário 1","type":"delete-button"}
     btn_id = eval(btn_id)  # Converte a string de volta ao dicionário
@@ -408,68 +409,52 @@ def deletar_documento(n_clicks, data):
     cenario_nome = btn_id['index']
     print('Cenário Nome: ', cenario_nome)  # Cenário Nome:  Cenário 1
 
-    # TODO: o código abaixo está quase 200%. Precisamos apenas incluir o banco e coleção de forma automáticas.
+    # TODO: o código abaixo está quase 100%.
 
     # 5) Vamos deletar todos os documentos que estão associados a essa chave. Vamos acessar primeiro para cada id do
     # cenario selecionado, rodaremos um delete no mongo db
 
-    # # 5.1) Conectar ao banco de dados
-    #
-    # banco_name = ""
-    # colecao_name = ""
-    # cliente, crud = conectar_ao_banco(collection_name=colecao_name, database_name=banco_name)
-    #
-    # # 5.2) Deletar os documentos
-    # for id_ in dict_ids[cenario_nome]:
-    #     filtro = {"_id": id_}
-    #     crud.delete_one_document(query=filtro)
-    #
-    # # 5.3) Fechar a conexão
-    # cliente.close_connection()
-    #
-    # # 6) Precisamos agora deletar todos os documentos com os ids que estão associados a essa chave do data_final
-    #
-    # # 6.1) Vamos deletar a chave do dicionário
-    # data_final_copy = data_final.copy()
-    #
-    # if cenario_nome in data_final_copy['Cenários']:
-    #     del data_final_copy['Cenários'][cenario_nome]
-    #
-    # # 6.2) Vamos retornar os dados atualizados
+    # 5.1) Vamos importar os dados do dcc.Store
+    data_store = json.loads(data)
 
-    # return data_final_copy
+    # 5.2) Desserializar os dados
+    data_final: dict[dict:list[dict]] = json_deserial(data_store)  # Dados que serão utilizados
+    # print(data_final)
 
-    return None
+    # 5.1) Vamos criar um dicionário com o nome das chaves e seus respectivos ids
+    dict_ids = {}
+    for cenario, docs in data_final['Cenários'].items():
+        dict_ids[cenario] = [doc['_id'] for doc in docs]
+
+    # 5.3) Conectar ao banco de dados
+    banco_name = bancos
+    colecao_name = colecao
+    cliente, crud = conectar_ao_banco(collection_name=colecao_name, database_name=banco_name)
+
+    # 5.4) Deletar os documentos dentro do dicionario
+    for id_ in dict_ids[cenario_nome]:
+        filtro = {"_id": id_}
+        crud.delete_one_document(query=filtro)
+
+    # 5.5) Fechar a conexão
+    cliente.close_connection()
+
+    # 6) Precisamos agora deletar todos os documentos com os ids que estão associados a essa chave do data_final
+
+    # 6.1) Vamos deletar a chave do dicionário
+    data_final_copy = data_final.copy()
+
+    if cenario_nome in data_final_copy['Cenários']:
+        del data_final_copy['Cenários'][cenario_nome]
+
+    # 1.4) Converte dicionário em JSON para ser armazenado em um dcc.Store
+    json_cenarios = json.dumps(data_final_copy, default=str)  # Dados que serão armazenados no dcc.Store
+
+    # TODO: o formato de json_cenarios precisa ser igual a função do callback: upload_data_from_mongo_to_store
+
+    return json_cenarios
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-    # ctx = callback_context
-    # if not ctx.triggered:
-    #     raise PreventUpdate
-    #
-    # # Identifica o botão clicado
-    # btn_id = ctx.triggered[0]['prop_id'].split('.')[0]
-    # btn_id = eval(btn_id)  # Converte a string de volta ao dicionário
-    #
-    # # Remove o cenário correspondente ao botão clicado
-    # cenario_nome = btn_id['index']
-    # if cenario_nome in data_final:
-    #     del data_final[cenario_nome]
-
-    # Retorna o layout atualizado e o novo estado do dcc.Store
-    return None
 
 
 # TODO: no momento de inserção de documentos, deveremos ter uma verificação para ver se já existe um cenário com o mesmo
