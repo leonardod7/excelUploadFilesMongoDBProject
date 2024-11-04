@@ -1,7 +1,8 @@
 # Importando as bibliotecas --------------------------------------------------------------------------------------------
 from dash import html, Input, Output, State, dash, dcc, page_registry, _dash_renderer
 import dash_mantine_components as dmc
-from pages.listar_documento_button_5 import consultar_documentos_page
+from pages.listar_documento import consultar_documentos_page
+from pages.inserir_documentos import inserir_documentos_page
 _dash_renderer._set_react_version("18.2.0")
 
 # Importando componentes do app ----------------------------------------------------------------------------------------
@@ -38,7 +39,7 @@ app.layout = dmc.MantineProvider(
 )
 def display_page(pathname):
     if pathname == '/inserir-documento':
-        return html.H3("under construction")
+        return inserir_documentos_page()
     elif pathname == '/consultar-documentos':
         return consultar_documentos_page()
     elif pathname == '/home':

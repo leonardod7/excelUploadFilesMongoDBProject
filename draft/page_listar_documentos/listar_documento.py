@@ -1,14 +1,16 @@
-# 0) Importando as bibliotecas -----------------------------------------------------------------------------------------
-from dash import dcc, html, Input, Output, State, callback, ALL, no_update, callback_context
+from datetime import datetime
+
+from bson import ObjectId
+from dash import dcc, html, Input, Output, State, callback
 from app import cache  # Importar o cache configurado
+import dash_bootstrap_components as dbc
 from dash.exceptions import PreventUpdate
 from functions.agrupar_por_chave import agrupar_por_chave
-from functions.funcoes import conectar_ao_banco, gerar_lista_cards, json_deserial, criar_cenarios
-import json
-import copy
-
+from functions.funcoes import conectar_ao_banco, render_card, aplicar_formato_data
+import dash_mantine_components as dmc
 
 # 1) Dados iniciais das coleções ---------------------------------------------------------------------------------------
+
 collection_eolicas_base_name: str = "SPE Ventos da Serra"
 collection_solar_base_name: str = "Parque Solar 1"
 collection_hidro_base_name: str = "UHE 1"
@@ -95,69 +97,18 @@ def consultar_documentos_page():
                              )
                 ],
             ),
-            # Div 3 ------------------------------------------------------------------------------------------------
-            # TODO: teste para receber uma selecao de documentos
-
         ])
 
     return page
 
 
-# 3) Callbacks ---------------------------------------------------------------------------------------------------------
-
-# 3.1) Callback para fazer upload da coleção selecionada e enviar para o dcc.Store -------------------------------------
-@callback(
-    Output(component_id='id-cenarios-store', component_property='data'),
-    Output(component_id='id-collection-db_names-store', component_property='data'),
-    [Input(component_id='id-radio-items-bancos', component_property='value'),  # Input para o banco de dados
-     Input(component_id='id-div-colecoes', component_property='children'),  # Input para as coleções
-     Input(component_id='id-colecoes-radio', component_property='value')],
-)
-def upload_data_from_mongo_to_store(db_name, colecoes_div, collection):
-
-    collection_db_names = [db_name, collection]
-    # print(collection_db_names)  # debug
-
-    if collection:
-
-        # 1) Vamos listar todos os documentos presentes em collection
-        filtro: dict = {"empresa": collection}
-        projecao = {"_id": 1, "nome": 1, "descricao": 1, "data": 1, "empresa": 1, "tipo": 1, "parte": 1, "setor": 1}
-
-        # 2) Conectar ao banco de dados e buscar documentos
-        cliente, crud = conectar_ao_banco(collection_name=collection, database_name=db_name)
-
-        try:
-            response: list[dict] = crud.select_many_documents(query=filtro, projection=projecao)
-            print('response')
-            print(response)
-            # 1.2) Agrupando lista de dicionarios por nome
-            agrupado = agrupar_por_chave(lista=response, chave="nome")
-
-            # 1.3) Cria dicionário para ser utilizado na estrutura do dcc.Store
-            cenarios: dict[dict:list[dict]] = criar_cenarios(agrupado)
-
-            # 1.4) Converte dicionário em JSON para ser armazenado em um dcc.Store
-            json_cenarios = json.dumps(cenarios, default=str)  # Dados que serão armazenados no dcc.Store
-
-            # print('json data armazenado no dcc.Store: id-cenarios-store')  # debug
-            # print(json_cenarios)  # debug
-
-        finally:
-            cliente.close_connection()
-
-    else:
-        return "Nenhuma coleção selecionada."
-
-    return json_cenarios, collection_db_names
-
-
-# 3.2) Callback para listar apenas o nome das coleções com cache com Radio Items ---------------------------------------
+# 1) Callback para listar as coleções com cache com Raio Items ---------------------------------------------------------
 @callback(
     Output(component_id='id-div-colecoes', component_property='children'),
     Input(component_id='id-radio-items-bancos', component_property='value')
 )
-def listar_colecoes_radio_items(value):
+def listar_colecoes(value):
+
     if value == 'Eólicas':
 
         # Nome da coleção no cache
@@ -226,7 +177,7 @@ def listar_colecoes_radio_items(value):
 
         return dc_radio_solar
 
-    elif value == 'Hidrelétricas':
+    else:
 
         # Nome da coleção no cache
         colecao_name: str = 'hidro_colecoes'
@@ -261,129 +212,91 @@ def listar_colecoes_radio_items(value):
         return dc_radio_hidro
 
 
-# 3.3) Callback para atualizar os cards com base nos dados -------------------------------------------------------------
+# 2) Callback para buscar dados no banco de dados com base na coleção selecionada --------------------------------------
 @callback(
-    Output(component_id="id-consult-section-page-2-2-1", component_property="children"),
-    Input(component_id="id-cenarios-store", component_property="data")
+    Output(component_id='id-consult-section-page-2-2-1', component_property='children'),
+    [Input(component_id='id-radio-items-bancos', component_property='value'),  # Input para o banco de dados
+     Input(component_id='id-div-colecoes', component_property='children'),  # Input para as coleções
+     Input(component_id='id-colecoes-radio', component_property='value')],  # State para coleção de Eólicas
 )
-def mostrar_cards_colecoes(cenarios: dict[dict:list[dict]]):
-    # Verifica se 'cenarios' é None, e se for, interrompe o callback
-    if cenarios is None:
-        return no_update  # Mantém o estado anterior sem atualizar
+def listar_colecoes(db_name, colecoes_div, collection):
+    # Debug -------------------------------------------------------------------------------------------------------
+    # print(f"db_name: {db_name}")  # Debug
+    # print(f"colecoes_div: {colecoes_div}")
 
-    try:
-        data_store = json.loads(cenarios)
-        data_final: dict[dict:list[dict]] = json_deserial(data_store)  # Dados que serão utilizados
-        data_final_cenarios: dict[list[dict]] = data_final['Cenários']
+    # print(f"collection: {collection}")  # Debug
 
-        # print('Cenários Store: ')  # debug
-        # print(cenarios)  # debug
-        # print('Agrupado formatado: ')  # debug
-        # print(data_final)  # debug
-        # print('Data Final Cenários: ')  # debug
-        # print(data_final_cenarios)  # debug
+    if collection:
+        filtro: dict = {"empresa": collection}
+        projecao = {"_id": 1, "nome": 1, "descricao": 1, "data": 1, "empresa": 1, "tipo": 1, "parte": 1, "setor": 1}
 
-        cards: list[html.Div] = gerar_lista_cards(agrupado_formatado=data_final_cenarios,
-                                                  agrupado_formatado_cenarios=data_final)
-    except json.JSONDecodeError:
-        return "Nenhum dado disponível para renderização."
+        # Conectar ao banco de dados e buscar documentos
+        cliente, crud = conectar_ao_banco(collection_name=collection, database_name=db_name)
 
-    return cards
+        try:
+            response: list[dict] = crud.select_many_documents(query=filtro, projection=projecao)
+            agrupado = agrupar_por_chave(lista=response, chave="nome")
+            # print(agrupado)  # debug
+
+            lista_formatada = aplicar_formato_data(agrupado)
+            # print(lista_formatada)  # debug
+
+            cards = []
+
+            for grupo, itens in agrupado.items():
+                div: html.Div = html.Div(children=[
+                    dmc.Stack([
+                        dmc.Divider(label=grupo,
+                                    color="lightgray",
+                                    labelPosition="center",
+                                    size="md",
+                                    style={
+                                        'fontWeight': 'bold',
+                                        'fontFamily': 'Arial Narrow',
+                                        'fontSize': '16px',
+                                        'marginTop': '10px',
+                                        'marginBottom': '10px',
+                                        'color': 'gray',
+                                    })]),
+
+                    html.Div([render_card(cenario=item) for item in itens], style={'display': 'flex',
+                                                                                   'flexDirection': 'column',
+                                                                                   'border': '1px solid gold',
+                                                                                   'padding': '10px',
+                                                                                   'marginBottom': '10px', })
+                ], style={
+                    'border': '1px solid red',
+                    'marginBottom': '10px',
+                })
+                # print(grupo)  # debug Cenário 1, Cenário 2, etc
+                # print(itens)  # debug Lista com os dicionários dos cenários parte 1, 2, 3, 4.
+                cards.append(div)  # Título do grupo
+
+            return cards  # Retorna a lista de documentos
+
+        finally:
+            cliente.close_connection()
+    else:
+        return "Nenhuma coleção selecionada."
 
 
-# 3.4) Callback para deletar um documento do banco de dados ------------------------------------------------------------
-# Vamos excluir os documentos com base nos ids que pertencem a um mesmo cenário
-@callback(Output(component_id="id-cenarios-store", component_property="data", allow_duplicate=True),
-          Input(component_id={"type": "delete-btn", "index": ALL}, component_property="n_clicks"),
-          State(component_id="id-collection-db_names-store", component_property="data"),
-          State(component_id="id-cenarios-store", component_property="data"), prevent_initial_call=True)
-def deletar_documento(n_clicks, list_banco_collection, data):
+# TODO: Implementar a exclusão de documentos no banco de dados, igual ao arquivo app_div_del_10.py
 
-    # print('Debug: -----')
-    # print('Data: -------------------------------------------------------------------------------------------- debug')
-    # print(data)
 
-    banco_nome = list_banco_collection[0]
-    colecao_nome = list_banco_collection[1]
 
-    print('Coleção: ', banco_nome)
-    print('Bancos: ', colecao_nome)
+# Executar o app
+if __name__ == "__main__":
+    pass
+    # colecao = "SPE Ventos da Serra"
+    # cliente, crud = conectar_ao_banco(collection_name=colecao, database_name="Eólicas")
+    # # print(crud.list_collections())  # debug
+    # filtro: dict = {"empresa": colecao}
+    # projecao = {"_id": 1, "nome": 1, "descricao": 1, "data": 1, "empresa": 1, "tipo": 1, "parte": 1, "setor": 1}
+    # response: list[dict] = crud.select_many_documents(query=filtro, projection=projecao)
+    # # print(response)  # debug
+    # agrupado = agrupar_por_chave(lista=response, chave="nome")
+    # # Debug agrupado --------------------------------------------------------------------------------------------------
+    # print(agrupado)
 
-    # 1) Obter o contexto do callback para verificar qual entrada foi acionada
-    ctx = callback_context
-    triggered = ctx.triggered[0]['prop_id'].split('.')[0]
-    print('Triggered context: ', triggered)
-    # {"index":"Cenário 2","type":"delete-button"} ou {"index":"Cenário 1","type":"delete-button"}
-
-    # 2) Se o callback foi acionado pelo radio items dos bancos, não faz nada
-
-    if not ctx.triggered or not n_clicks or all(click is None for click in n_clicks):
-        raise PreventUpdate
-
-    print('n clicks:', n_clicks)
-    total_clicks = sum(n_clicks)
-
-    # 3) Se o callback foi acionado pelo botão de deletar, processa a atualização. o n_clicks precisa ser maior que 0
-    if total_clicks > 0:
-        # 3.1) Identifica o botão clicado com o nome da chave (Cenário 1, Cenário 2 etc)
-        btn_id = ctx.triggered[0]['prop_id'].split('.')[0]
-        print('btn_id: ', btn_id)  # {'index': 'Cenário 1', 'type': 'delete-btn'}
-        btn_id = eval(btn_id)  # Converte a string de volta ao dicionário para podermos acessar os valores separadamente
-        btn_id_type = btn_id['type']  # delete-btn
-        cenario_nome = btn_id['index']  # Cenário 1, 2, e etc..
-        print('btn_id_type: ', btn_id_type)
-        print('Cenário Nome: ', cenario_nome)
-
-    # TODO: Até aqui a parte de cima, está ok.
-
-        # 3.2.1) Vamos importar os dados do dcc.Store
-        data_store = json.loads(data)
-        print('Data Store: ', data_store)
-
-        # 3.2.2) Desserializar os dados
-        data_final: dict[dict:list[dict]] = json_deserial(data_store)
-        print('Data Final: ', data_final)
-
-        # 3.2.3) Vamos criar um dicionário com o nome das chaves e seus respectivos ids
-        dict_ids = {}
-        for cenario, docs in data_final['Cenários'].items():
-            dict_ids[cenario] = [doc['_id'] for doc in docs]
-        print('Dict IDs: ', dict_ids)
-
-        # 3.2.4) Conectar ao banco de dados
-        banco_name = banco_nome
-        colecao_name = colecao_nome
-        cliente, crud = conectar_ao_banco(collection_name=colecao_name, database_name=banco_name)
-
-        # 3.2.5) Deletar os documentos dentro do dicionario
-        cenario_selecionado = dict_ids[cenario_nome]
-        print('Cenário Selecionado', cenario_selecionado)
-
-        for id_ in cenario_selecionado:
-            filtro = {"_id": id_}
-            crud.delete_one_document(query=filtro)
-
-        # 3.2.6) Fechar a conexão
-        cliente.close_connection()
-
-        # TODO: Até aqui a parte de cima, está ok. Estamos conseguindo deletar os documentos com base nos ids do cenário.
-
-        # 3.2.7) Precisamos agora deletar todos os documentos que foram deletados no banco, do data_final para que
-        # possamos atualizar o dcc.Store
-
-        data_final_copy = copy.deepcopy(data_final)
-
-        if cenario_nome in data_final_copy['Cenários']:
-            del data_final_copy['Cenários'][cenario_nome]
-
-        # 3.2.8) Converte dicionário em JSON para ser devolvido ao dcc.Store
-        json_cenarios = json.dumps(data_final_copy, default=str)  # Dados que serão armazenados no dcc.Store
-
-        return json_cenarios
-
-    return data
-
-# TODO: PRECISAMOS INCLUIR UM AJUSTE PARA CONSEGUIR INCLUIR A DRE, O BP E O FCD NO MESMO CENÁRIO NOME. ESSE AJUSTE É
-# NA INSERÇÃO ONDE VERÁ LEVAR EM CONSIDERAÇÃO O TIPO DE DOCUMENTO QUE ESTÁ SENDO INSERIDO. SE FOR DRE, BP OU FCD,
 
 

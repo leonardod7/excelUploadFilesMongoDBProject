@@ -1,9 +1,6 @@
 from model.MongoConnection import MongoEolicasConnection
 from pymongo.errors import DuplicateKeyError
 
-# Carrega as variáveis de ambiente do arquivo .env
-
-
 class MongoDBCRUD:
 
     """

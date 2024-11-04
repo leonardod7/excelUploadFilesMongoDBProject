@@ -3,6 +3,7 @@ import pandas as pd
 import dash_bootstrap_components as dbc
 from dash import dcc, html
 import dash_mantine_components as dmc
+from bson import ObjectId
 
 from dao.MongoCRUD import MongoDBCRUD
 from model.MongoConnection import MongoEolicasConnection, MongoSolarConnection, MongoHidroConnection
@@ -115,6 +116,7 @@ def criar_partes_documento(file_path: str, setor: str, empresa_nome: str, cenari
     lista: list = [documento_spe_dre_part_1, documento_spe_dre_part_2, documento_spe_dre_part_3, documento_spe_dre_part_4]
 
     return lista
+
 
 # 2) Função para conectar ao banco de dados e retornar as instâncias do cliente e do CRUD ------------------------------
 def conectar_ao_banco(collection_name: str, database_name: str):
@@ -274,3 +276,87 @@ def aplicar_formato_data(documento):
     return documento
 
 
+# 7) Função para gerar a lista de cards -------------------------------------------------------------------------------
+def gerar_lista_cards(agrupado_formatado: dict[list[dict]],
+                      agrupado_formatado_cenarios: dict[list[dict]]) -> list[html.Div]:
+    cards = []
+
+    for grupo, itens in agrupado_formatado.items():
+        # print(grupo)  # debug Cenário 1, Cenário 2, etc
+
+        div: html.Div = html.Div(children=[
+            # Div com o título do grupo
+            dmc.Stack([
+                dmc.Divider(label=grupo,
+                            color="lightgray",
+                            labelPosition="left",
+                            size="md",
+                            style={
+                                'fontWeight': 'bold',
+                                'fontFamily': 'Arial Narrow',
+                                'fontSize': '16px',
+                                'marginTop': '10px',
+                                'marginBottom': '10px',
+                                'color': 'gray',
+                            })]),
+
+            # Div com o botão de exclusão
+            html.Div([
+                dbc.Button(children=["🗑️"], n_clicks=0,
+                           className="delete-button-cenarios",
+                           id={"type": "delete-btn", "index": grupo}
+                           ),
+            ]),
+
+            # Div com os cards
+            html.Div([render_card(cenario=item) for item in itens], style={'display': 'flex',
+                                                                           'flexDirection': 'column',
+                                                                           # 'border': '1px solid gold',
+                                                                           'padding': '10px',
+                                                                           'marginBottom': '10px', })
+        ], style={
+            'border': '1px solid red',
+            'marginBottom': '10px',
+        })
+        # print(grupo)  # debug Cenário 1, Cenário 2, etc
+        # print(itens)  # debug Lista com os dicionários dos cenários parte 1, 2, 3, 4.
+        cards.append(div)  # Título do grupo
+
+    return cards
+
+
+# 8) Função para criar os cenários -------------------------------------------------------------------------------------
+def criar_cenarios(dicionario: dict[list[dict]]) -> dict[dict:list[dict]]:
+    # Criar um novo dicionário com a chave "Cenários"
+    cenarios = {"Cenários": dicionario}
+    return cenarios
+
+
+# 9) Função para deserializar JSON -------------------------------------------------------------------------------------
+def json_deserial(data):
+    # Verifica se 'data' é um dicionário que contém cenários
+    if isinstance(data, dict) and 'Cenários' in data:
+        for cenario, documentos in data['Cenários'].items():
+            # Verifica se 'documentos' é uma lista
+            if isinstance(documentos, list):
+                for doc in documentos:
+                    for key, value in doc.items():
+                        # Converte strings que representam ObjectId de volta ao formato ObjectId
+                        if key == '_id' and isinstance(value, str):
+                            doc[key] = ObjectId(value)
+                        # Converte strings ISO de volta para datetime
+                        elif isinstance(value, str) and 'T' in value and ':' in value:
+                            try:
+                                doc[key] = datetime.fromisoformat(value)
+                            except ValueError:
+                                pass  # Ignora erros de conversão
+    return data
+
+
+# 10) Função para serializar JSON --------------------------------------------------------------------------------------
+def stringify_object_ids(data):
+    for cenario, docs in data.items():
+        for doc in docs:
+            if '_id' in doc and isinstance(doc['_id'], ObjectId):
+                doc['_id'] = str(doc['_id'])
+    return data

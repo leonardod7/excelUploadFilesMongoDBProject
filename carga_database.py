@@ -5,7 +5,7 @@ from pymongo import MongoClient
 import pandas as pd
 
 # Importando classes de conexão, funções e CRUD ------------------------------------------------------------------------
-from dao.MongoCRUD import MongoDBCRUD
+from dao.MongoCRUD_Teste import MongoDBCRUD
 from model.MongoConnection import MongoEolicasConnection, MongoSolarConnection, MongoHidroConnection
 from functions.funcoes import *
 
@@ -21,7 +21,7 @@ cliente_eolicas.connect_to_db()
 
 # Criando listas de nomes de usinas ------------------------------------------------------------------------------------
 
-usinas_solares = [
+usinas_solares_2 = [
     "Parque Solar 1",
     "Parque Solar 2",
     "Parque Solar 3",
@@ -34,25 +34,7 @@ usinas_solares = [
     "Parque Solar 10"
 ]
 
-usinas_hidro = [
-    "UHE 1",
-    "UHE 2",
-    "UHE 3",
-    "UHE 4",
-    "UHE 5",
-    "UHE 6",
-    "UHE 7",
-    "UHE 8",
-    "UHE 9",
-    "UHE 10",
-    "UHE 11",
-    "UHE 12",
-    "UHE 13",
-    "UHE 14",
-    "UHE 15"
-]
-
-usinas_eolicas = [
+usinas_eolicas_2 = [
     "SPE Ventos da Serra",
     "SPE Brisa Forte",
     "SPE Energia dos Mares",
@@ -75,108 +57,177 @@ usinas_eolicas = [
     "SPE Ventos do Atlântico"
 ]
 
+usinas_hidro_2 = [
+    "UHE 1",
+    "UHE 2",
+    "UHE 3",
+    "UHE 4",
+    "UHE 5",
+    "UHE 6",
+    "UHE 7",
+    "UHE 8",
+    "UHE 9",
+    "UHE 10",
+    "UHE 11",
+    "UHE 12",
+    "UHE 13",
+    "UHE 14",
+    "UHE 15"
+]
+
+usinas_solares: list[str] = [
+    "Parque Solar 1",
+    "Parque Solar 2",
+    "Parque Solar 3",
+    "Parque Solar 4",
+]
+
+
+usinas_eolicas: list[str] = [
+    "SPE Ventos da Serra",
+    "SPE Brisa Forte",
+    "SPE Energia dos Mares",
+    "SPE Ventos do Horizonte",
+]
+
+usinas_hidro: list[str] = [
+    "UHE 1",
+    "UHE 2",
+    "UHE 3",
+    "UHE 4",
+
+]
+
 
 # TODO: Colocar bancos de dados no mesmo projeto ao invés de projetos separados. Do jeito que está,
 #  temos hidreletricas, Solar e olicas separados.
+
+
+
+
 
 
 if __name__ == '__main__':
 
     # 1) Inserção de Dados  --------------------------------------------------------------------------------------------
 
-    # Original
-    # 1.1) Inserindo dados para as usinas eólicas ----------------------------------------------------------------------
-    for nome in usinas_eolicas:
-
-        setor: str = "eolicas"
-        collection_name: str = nome
-        eolicas_crud = MongoDBCRUD(db_connection=cliente_eolicas, collection_name=collection_name)
-        cenario_name: str = "Cenário 1"
-
-        documentos: list[dict] = criar_partes_documento(
-            file_path='/Users/leonardo/Documents/PyCharm/Github/excelUploadFilesMongoDBProject/files/'
-                      'SPE_1_Cenario1.xlsx',
-            setor=setor,
-            empresa_nome=nome,
-            cenario_nome=cenario_name,
-            descricao_cenario='Cenário com investimento em novos parques eólicos, variando 5%',
-            sheet_name='DRE',
-            demonstrativo_name='Demonstração de Resultado',
-            nome_segunda_coluna='Driver'
-        )
-
-        for documento in documentos:
-            unique_fields = {"empresa": nome, "nome": cenario_name}
-            eolicas_crud.insert_document(document=documento, unique_fields=unique_fields)
-
-    # 1.2) Inserindo dados para as usinas hidreletricas ----------------------------------------------------------------
-    # for nome in usinas_hidro:
+    # 1.1) Inserindo dados para as usinas solares ----------------------------------------------------------------------
+    # for spe in usinas_solares:
     #
-    #     setor: str = "hidro"
-    #     collection_name: str = nome
-    #     hidro_crud = MongoDBCRUD(db_connection=cliente_hidro, collection_name=collection_name)
+    #     # Input do usuário no front-end Interface Dash) ----------------------------------------------------------------
+    #     setor: str = "solar"  # (Componente dropdown)
+    #     collection_name: str = spe  # (Componente - input)
+    #     solar_crud = MongoDBCRUD(db_connection=cliente_solar, collection_name=collection_name)
+    #     cenario_name: str = "Cenário 2"  # (Componente - input)
+    #     descricao: str = 'Cenário de venda de parques solares + 5%'  # (Componente - textarea)
+    #     sheet_name: str = 'DRE'  # BP, FCD, DRE (componente - dropdown)
+    #     demonstrativo: str = 'Demonstração de Resultado'  # Demonstração de Resultado, Balanço Patrimonial, Fluxo de Caixa Direto (componente - dropdown)
+    #     nome_segunda_coluna: str = "Driver"
     #
     #     documentos: list[dict] = criar_partes_documento(
     #         file_path='/Users/leonardo/Documents/PyCharm/Github/excelUploadFilesMongoDBProject/files/'
-    #                   'SPE_1_Cenario1.xlsx',
+    #                   'SPE_1_Cenario1.xlsx',  # drag and drop do arquivo
     #         setor=setor,
-    #         empresa_nome=nome,
-    #         cenario_nome='Cenário 1',
-    #         descricao_cenario='Cenário com investimento em novas UHEs, variando 15%',
-    #         sheet_name='DRE',
-    #         demonstrativo_name='Demonstração de Resultado',
-    #         nome_segunda_coluna='Driver'
+    #         empresa_nome=spe,
+    #         cenario_nome=cenario_name,
+    #         descricao_cenario=descricao,
+    #         sheet_name=sheet_name,
+    #         demonstrativo_name=demonstrativo,
+    #         nome_segunda_coluna=nome_segunda_coluna
     #     )
     #
     #     for documento in documentos:
-    #         unique_fields = {"empresa": nome, "nome": "Cenário 1"}
-    #         hidro_crud.insert_document(document=documento, unique_fields=unique_fields)
+    #         # unique_fields = {"empresa": spe, "nome": cenario_name}
+    #         unique_fields = {"empresa": spe, "nome": cenario_name, "tipo": sheet_name}
+    #         solar_crud.insert_document(document=documento, unique_fields=unique_fields)
 
-    # 1.3) Inserindo dados para as usinas solares ---------------------------------------------------------------------
-    # for nome in usinas_solares:
+    # 1.2) Inserindo dados para as usinas eólicas ----------------------------------------------------------------------
+    # for spe in usinas_eolicas:
     #
-    #         setor: str = "solar"
-    #         collection_name: str = nome
-    #         solar_crud = MongoDBCRUD(db_connection=cliente_solar, collection_name=collection_name)
+    #     # Input do usuário no front-end Interface Dash) ----------------------------------------------------------------
+    #     setor: str = "eolicas"  # (Componente dropdown)
+    #     collection_name: str = spe  # (Componente - input)
+    #     eolicas_crud = MongoDBCRUD(db_connection=cliente_eolicas, collection_name=collection_name)
+    #     cenario_name: str = "Cenário 1"  # (Componente - input)
+    #     descricao: str = 'Cenário de venda de parques solares + 8%'  # (Componente - textarea)
+    #     sheet_name: str = 'BP'  # BP, FCD, DRE (componente - dropdown)
+    #     demonstrativo: str = 'Balanço Patrimonial'  # Demonstração de Resultado, Balanço Patrimonial, Fluxo de Caixa Direto (componente - dropdown)
+    #     nome_segunda_coluna: str = "Driver"
     #
-    #         documentos: list[dict] = criar_partes_documento(
-    #             file_path='/Users/leonardo/Documents/PyCharm/Github/excelUploadFilesMongoDBProject/files/'
-    #                     'SPE_1_Cenario1.xlsx',
-    #             setor=setor,
-    #             empresa_nome=nome,
-    #             cenario_nome='Cenário 1',
-    #             descricao_cenario='Cenário com investimento em novos parques solares, variando 15%',
-    #             sheet_name='DRE',
-    #             demonstrativo_name='Demonstração de Resultado',
-    #             nome_segunda_coluna='Driver'
-    #         )
+    #     documentos: list[dict] = criar_partes_documento(
+    #         file_path='/Users/leonardo/Documents/PyCharm/Github/excelUploadFilesMongoDBProject/files/'
+    #                   'SPE_1_Cenario1.xlsx',  # drag and drop do arquivo
+    #         setor=setor,
+    #         empresa_nome=spe,
+    #         cenario_nome=cenario_name,
+    #         descricao_cenario=descricao,
+    #         sheet_name=sheet_name,
+    #         demonstrativo_name=demonstrativo,
+    #         nome_segunda_coluna=nome_segunda_coluna
+    #     )
     #
-    #         for documento in documentos:
-    #             unique_fields = {"empresa": nome, "nome": "Cenário 1"}
-    #             solar_crud.insert_document(document=documento, unique_fields=unique_fields)
+    #     for documento in documentos:
+    #         # unique_fields = {"empresa": spe, "nome": cenario_name}
+    #         unique_fields = {"empresa": spe, "nome": cenario_name, "tipo": sheet_name}
+    #         eolicas_crud.insert_document(document=documento, unique_fields=unique_fields)
 
-    # 2) Consulta de Dados  ---------------------------------------------------------------------------------------------
+    # 1.3) Inserindo dados para as usinas hidreletricas ----------------------------------------------------------------
+    for uhe in usinas_hidro:
 
-    # 2.1) Consultando um documento referente a uma empresa ------------------------------------------------------------------------
+        # Input do usuário no front-end Interface Dash) ----------------------------------------------------------------
+        setor: str = "hidro"
+        collection_name: str = uhe
+        hidro_crud = MongoDBCRUD(db_connection=cliente_hidro, collection_name=collection_name)
+        cenario_name: str = "Cenário 1"
+        descricao: str = 'Cenário de venda de parques solares + 11%'
+        sheet_name: str = 'DRE'
+        demonstrativo: str = 'Demonstração de Resultado'
+        nome_segunda_coluna: str = "Driver"
 
-    # collection_name: str = "SPE Alto da Serra"
-    # filtro: dict = {"empresa": collection_name, "nome": "Cenário 1", "tipo": "dre"}
+        documentos: list[dict] = criar_partes_documento(
+            file_path='/Users/leonardo/Documents/PyCharm/Github/excelUploadFilesMongoDBProject/files/'
+                      'SPE_1_Cenario1.xlsx',  # drag and drop do arquivo
+            setor=setor,
+            empresa_nome=uhe,
+            cenario_nome=cenario_name,
+            descricao_cenario=descricao,
+            sheet_name=sheet_name,
+            demonstrativo_name=demonstrativo,
+            nome_segunda_coluna=nome_segunda_coluna
+        )
+
+        for documento in documentos:
+            unique_fields = {"empresa": uhe, "nome": cenario_name, "tipo": sheet_name}
+            hidro_crud.insert_document(document=documento, unique_fields=unique_fields)
+
+
+
+
+    # 2) Consulta de Dados  --------------------------------------------------------------------------------------------
+
+    # 2.1) Consultando um documento referente a uma empresa ------------------------------------------------------------
+
+    # collection_name: str = "Parque Solar 1"
+    # tipo: str = "bp"
+    # filtro: dict = {"empresa": collection_name, "nome": "Cenário 1", "tipo": tipo}
     # projecao = {"empresa": 1, "tipo": 1, "parte": 1, "_id": 0}
     #
-    # eolicas_crud = MongoDBCRUD(db_connection=cliente_eolicas, collection_name=collection_name)
+    # solar_crud = MongoDBCRUD(db_connection=cliente_solar, collection_name=collection_name)
     #
-    # response = eolicas_crud.select_many_documents(query=filtro, projection=projecao)
+    # response = solar_crud.select_many_documents(query=filtro, projection=projecao)
     # print(response)
-    #
-    # # 2.2) Consultando todos os documentos de uma coleção --------------------------------------------------------------
-    # collection_name: str = "SPE Alto da Serra"
+
+    # 2.2) Consultando todos os documentos de uma coleção --------------------------------------------------------------
+
+    # collection_name: str = "Parque Solar 1"
     # filtro: dict = {"empresa": collection_name}
-    # projecao = {"empresa": 1, "tipo": 1, "parte": 1, "_id": 0}
+    # projecao = {"nome": 1, "descricao": 1, "data": 1, "empresa": 1, "tipo": 1, "parte": 1, "_id": 0}
     #
-    # eolicas_crud = MongoDBCRUD(db_connection=cliente_eolicas, collection_name=collection_name)
+    # solar_crud = MongoDBCRUD(db_connection=cliente_solar, collection_name=collection_name)
+    # response: list[dict] = solar_crud.select_many_documents(query=filtro, projection=projecao)
     #
-    # response = eolicas_crud.select_many_documents(query=filtro, projection=projecao)
     # print(response)
+
 
 
 
@@ -191,6 +242,7 @@ if __name__ == '__main__':
 
 
     # Fechando as conexões ---------------------------------------------------------------------------------------------
+
     cliente_solar.close_connection()
     cliente_hidro.close_connection()
     cliente_eolicas.close_connection()
