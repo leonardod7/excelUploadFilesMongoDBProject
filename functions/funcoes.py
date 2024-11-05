@@ -152,9 +152,6 @@ def agrupar_por_chave(lista: list[dict], chave: str):
 def render_card(cenario) -> dbc.Card:
     card: dbc.Card = dbc.Card(
         dbc.CardBody([
-            # TODO: Colocar o nome do cenário com uma imagem e botão dentro de uma div.
-            # TODO: Incluir uma linha ao lado do nome
-            # TODO: Incluir um botão de exclusão
             html.H4(children=[html.Span(children=[f"{cenario['nome']}"], style={'fontWeight': 'bold', 'color': 'gray'})],
                     className="card-title", style={'fontFamily': 'Arial Narrow',
                                                    'fontSize': '14px',
@@ -315,7 +312,7 @@ def gerar_lista_cards(agrupado_formatado: dict[list[dict]],
                                                                            'padding': '10px',
                                                                            'marginBottom': '10px', })
         ], style={
-            'border': '1px solid red',
+            # 'border': '1px solid red',
             'marginBottom': '10px',
         })
         # print(grupo)  # debug Cenário 1, Cenário 2, etc

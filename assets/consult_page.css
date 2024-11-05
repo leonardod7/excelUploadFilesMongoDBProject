@@ -15,7 +15,8 @@ body {
     width: 100%;
     /*border: 4px solid gray;*/
     background-color: #d9d9d9;
-    padding: 20px;
+    /*background: white;*/
+    padding: 10px;
     z-index: 1; /* Mantém as divs abaixo do navbar */
 }
 

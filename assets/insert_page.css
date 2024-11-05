@@ -7,7 +7,7 @@
     border-radius: 10px;
     height: auto;
     flex-direction: column;
-    background: white;
+    background: lightgray;
     padding: 10px;
     /*border-radius: 10px;*/
 }
@@ -48,6 +48,21 @@
     padding: 20px;
 }
 
+
+
+/*.insert-doc-page-div-parametros-4 {*/
+/*    display: flex;*/
+/*    width: 100%;*/
+/*    height: 180px;*/
+/*    !*border: 4px solid orangered;*!*/
+/*    border-style: inset;*/
+/*    border-radius: 10px;*/
+/*    flex-direction: column;*/
+/*    margin-bottom: 20px;*/
+/*    padding: 20px;*/
+/*}*/
+
+
 .insert-section-page-1 {
     width: 30%;
     height: 100% ;
@@ -85,4 +100,15 @@
     flex-direction: column;
     padding: 10px;
     margin-bottom: 20px;
+}
+
+.btn-submit-doc {
+    width: 150px;
+    height: 30px;
+    background: gold;
+    color: gray;
+    border: none;
+    border-radius: 10px;
+    font-size: 14px;
+    cursor: pointer;
 }

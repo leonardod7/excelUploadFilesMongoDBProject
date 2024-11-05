@@ -67,8 +67,8 @@ def parse_contents(contents):
     )
 
 # Callback para processar o upload e exibir a tabela
-@app.callback(Output('output-table', 'children'),
-              Input('upload-data', 'contents'))
+@app.callback(Output(component_id='output-table', component_property='children'),
+              Input(component_id='upload-data', component_property='contents'))
 def update_output(contents):
     if contents is not None:
         return parse_contents(contents)

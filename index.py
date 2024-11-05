@@ -50,4 +50,4 @@ def display_page(pathname):
 
 # Rodando o app -------------------------------------------------------------------------------------------------------
 if __name__ == '__main__':
-    app.run(debug=True, port=8058)
+    app.run(debug=True, port=8059)
