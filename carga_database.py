@@ -172,33 +172,33 @@ if __name__ == '__main__':
     #         eolicas_crud.insert_document(document=documento, unique_fields=unique_fields)
 
     # 1.3) Inserindo dados para as usinas hidreletricas ----------------------------------------------------------------
-    # for uhe in usinas_hidro:
-    #
-    #     # Input do usuário no front-end Interface Dash) ----------------------------------------------------------------
-    #     setor: str = "hidro"
-    #     collection_name: str = uhe
-    #     hidro_crud = MongoDBCRUD(db_connection=cliente_hidro, collection_name=collection_name)
-    #     cenario_name: str = "Cenário 1"
-    #     descricao: str = 'Cenário de venda de parques solares + 11%'
-    #     sheet_name: str = 'DRE'
-    #     demonstrativo: str = 'Demonstração de Resultado'
-    #     nome_segunda_coluna: str = "Driver"
-    #
-    #     documentos: list[dict] = criar_partes_documento(
-    #         file_path='/Users/leonardo/Documents/PyCharm/Github/excelUploadFilesMongoDBProject/files/'
-    #                   'SPE_1_Cenario1.xlsx',  # drag and drop do arquivo
-    #         setor=setor,
-    #         empresa_nome=uhe,
-    #         cenario_nome=cenario_name,
-    #         descricao_cenario=descricao,
-    #         sheet_name=sheet_name,
-    #         demonstrativo_name=demonstrativo,
-    #         nome_segunda_coluna=nome_segunda_coluna
-    #     )
-    #
-    #     for documento in documentos:
-    #         unique_fields = {"empresa": uhe, "nome": cenario_name, "tipo": sheet_name}
-    #         hidro_crud.insert_document(document=documento, unique_fields=unique_fields)
+    for uhe in usinas_hidro:
+
+        # Input do usuário no front-end Interface Dash) ----------------------------------------------------------------
+        setor: str = "hidro"
+        collection_name: str = uhe
+        hidro_crud = MongoDBCRUD(db_connection=cliente_hidro, collection_name=collection_name)
+        cenario_name: str = "Cenário 1"
+        descricao: str = 'Cenário de venda de parques solares + 11%'
+        sheet_name: str = 'DRE'
+        demonstrativo: str = 'Demonstração de Resultado'
+        nome_segunda_coluna: str = "Driver"
+
+        documentos: list[dict] = criar_partes_documento(
+            file_path='/Users/leonardo/Documents/PyCharm/Github/excelUploadFilesMongoDBProject/files/'
+                      'SPE_1_Cenario1.xlsx',  # drag and drop do arquivo
+            setor=setor,
+            empresa_nome=uhe,
+            cenario_nome=cenario_name,
+            descricao_cenario=descricao,
+            sheet_name=sheet_name,
+            demonstrativo_name=demonstrativo,
+            nome_segunda_coluna=nome_segunda_coluna
+        )
+
+        for documento in documentos:
+            unique_fields = {"empresa": uhe, "nome": cenario_name, "tipo": sheet_name}
+            hidro_crud.insert_document(document=documento, unique_fields=unique_fields)
 
 
 

@@ -3,7 +3,7 @@
 body {
     margin: 0; /* Remover margens padrão do body */
     padding: 0; /* Remover preenchimento padrão do body */
-    background: white; /* Cor de fundo desejada para toda a página */
+    background: #d9d9d9; /* Cor de fundo desejada para toda a página */
     height: 100%;
     font-family: "Arial Narrow", sans-serif;
 }

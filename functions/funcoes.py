@@ -8,10 +8,11 @@ from bson import ObjectId
 from dao.MongoCRUD import MongoDBCRUD
 from model.MongoConnection import MongoEolicasConnection, MongoSolarConnection, MongoHidroConnection
 
+
 # 1) Função para criar as partes do documento --------------------------------------------------------------------------
 def criar_partes_documento(file_path: str, setor: str, empresa_nome: str, cenario_nome: str,
-                           descricao_cenario: str, sheet_name: str, demonstrativo_name: str, nome_segunda_coluna: str) -> list[dict]:
-
+                           descricao_cenario: str, sheet_name: str, demonstrativo_name: str,
+                           nome_segunda_coluna: str) -> list[dict]:
     """
     O objetivo dessa função é transformar o demonstrativo de cada empresa em partes menores e torná-las documentos que possam ser salvos no MongoDB Atlas
     sem o risco de ultrapassar o tamanho de array recomendado pelo MongoDB.
@@ -39,10 +40,7 @@ def criar_partes_documento(file_path: str, setor: str, empresa_nome: str, cenari
     # Dividindo o DataFrame em três partes
     df_part_1 = dre.iloc[:, :50]  # As primeiras 70 colunas
 
-
     chave_name = 'dre' if sheet_name == 'DRE' else 'bp' if sheet_name == 'BP' else 'fcd'
-
-
 
     # Para as partes 2 e 3, concatenamos as duas primeiras colunas com as colunas específicas
     df_part_2 = pd.concat([colunas_iniciais, dre.iloc[:, 50:100]], axis=1)  # Duas primeiras + colunas 50 a 100
@@ -113,12 +111,61 @@ def criar_partes_documento(file_path: str, setor: str, empresa_nome: str, cenari
         "parte": 4
     }
 
-    lista: list = [documento_spe_dre_part_1, documento_spe_dre_part_2, documento_spe_dre_part_3, documento_spe_dre_part_4]
+    lista: list = [documento_spe_dre_part_1, documento_spe_dre_part_2, documento_spe_dre_part_3,
+                   documento_spe_dre_part_4]
 
     return lista
 
+# Essa função é a mesma que a de cima, porém, mais otimizada e com menos repetição de código. Além disso, ela parte do
+# arquivo no formato DataFrame, ao invés de carregar o arquivo Excel de um caminho.
+def criar_partes_documento_from_drag_and_drop(df: pd.DataFrame, setor: str, empresa_nome: str, cenario_nome: str,
+                                              descricao_cenario: str, sheet_name: str, demonstrativo_name: str,
+                                              nome_segunda_coluna: str) -> list[dict]:
+    """
+    O objetivo dessa função é transformar o demonstrativo de cada empresa em partes menores e torná-las documentos que possam ser salvos no MongoDB Atlas
+    sem o risco de ultrapassar o tamanho de array recomendado pelo MongoDB.
 
-# 2) Função para conectar ao banco de dados e retornar as instâncias do cliente e do CRUD ------------------------------
+    :param df: DataFrame contendo os dados do arquivo Excel
+    :param setor: Setor da empresa (eolicas, solar, hidrelétrica, etc)
+    :param empresa_nome: Nome da empresa (SPE Moinhos de Vento, SPE Solar Leste, etc)
+    :param cenario_nome: Nome do cenário (Cenário 1, Cenário 2, etc)
+    :param descricao_cenario: Descrição do cenário (Cenário com investimento em novos parques eólicos)
+    :param sheet_name: Nome da aba do arquivo Excel (DRE, FCD, BP)
+    :param demonstrativo_name: Nome do demonstrativo (Demonstração de Resultado, Balanço Patrimonial, Fluxo de Caixa Direto)
+    :param nome_segunda_coluna: Nome da segunda coluna do demonstrativo (Driver)
+    :return: Retorna uma lista com dicionários referentes a cada parte do demonstrativo
+    """
+
+    # Dividindo o DataFrame em três partes
+    colunas_iniciais = df.iloc[:, :2]
+    df_part_1 = df.iloc[:, :50]  # Primeiras 50 colunas
+    df_part_2 = pd.concat([colunas_iniciais, df.iloc[:, 50:100]], axis=1)  # Duas primeiras + colunas 50 a 100
+    df_part_3 = pd.concat([colunas_iniciais, df.iloc[:, 100:150]], axis=1)  # Duas primeiras + colunas 100 a 150
+    df_part_4 = pd.concat([colunas_iniciais, df.iloc[:, 150:]], axis=1)  # Duas primeiras + colunas 150 em diante
+
+    chave_name = 'dre' if sheet_name == 'DRE' else 'bp' if sheet_name == 'BP' else 'fcd'
+
+    # Criando as partes para salvar no MongoDB
+    partes = []
+    for i, parte_df in enumerate([df_part_1, df_part_2, df_part_3, df_part_4], start=1):
+        df_long = parte_df.melt(id_vars=[demonstrativo_name, nome_segunda_coluna], var_name='Data', value_name='Valor')
+        df_list = df_long.to_dict(orient='records')
+
+        documento = {
+            "nome": cenario_nome,
+            "descricao": descricao_cenario,
+            "data": datetime.now(),
+            "setor": setor,
+            "empresa": empresa_nome,
+            chave_name: df_list,
+            "tipo": chave_name,
+            "parte": i
+        }
+        partes.append(documento)
+
+    return partes
+
+
 def conectar_ao_banco(collection_name: str, database_name: str):
     if database_name == 'Eólicas':
         cliente = MongoEolicasConnection()
@@ -152,12 +199,13 @@ def agrupar_por_chave(lista: list[dict], chave: str):
 def render_card(cenario) -> dbc.Card:
     card: dbc.Card = dbc.Card(
         dbc.CardBody([
-            html.H4(children=[html.Span(children=[f"{cenario['nome']}"], style={'fontWeight': 'bold', 'color': 'gray'})],
-                    className="card-title", style={'fontFamily': 'Arial Narrow',
-                                                   'fontSize': '14px',
-                                                   'borderBottom': '0.5px solid gray',
-                                                   # 'paddingBottom': '5px',
-                                                   'marginTop': '1px',}),
+            html.H4(
+                children=[html.Span(children=[f"{cenario['nome']}"], style={'fontWeight': 'bold', 'color': 'gray'})],
+                className="card-title", style={'fontFamily': 'Arial Narrow',
+                                               'fontSize': '14px',
+                                               'borderBottom': '0.5px solid gray',
+                                               # 'paddingBottom': '5px',
+                                               'marginTop': '1px', }),
 
             # Div com o título, parte, empresa, data e tipo
             html.Div(children=[
@@ -165,28 +213,32 @@ def render_card(cenario) -> dbc.Card:
                 html.P(children=[
                     html.Span(children=["Parte: "], style={'fontWeight': 'bold', 'color': 'gray'}),
                     f"{cenario['parte']}",
-                    html.Span(children=[" |"], style={'fontStyle': 'italic', 'color': 'black'})  # Estilizando o separador
+                    html.Span(children=[" |"], style={'fontStyle': 'italic', 'color': 'black'})
+                    # Estilizando o separador
                 ], className="card-text",
                     style={'fontFamily': 'Arial Narrow', 'fontSize': '12px'}),
 
                 html.P(children=[
                     html.Span(children=["Empresa: "], style={'fontWeight': 'bold', 'color': 'gray'}),
                     f"{cenario['empresa']}",
-                    html.Span(children=[" |"], style={'fontStyle': 'italic', 'color': 'black'})  # Estilizando o separador
+                    html.Span(children=[" |"], style={'fontStyle': 'italic', 'color': 'black'})
+                    # Estilizando o separador
                 ], className="card-text",
                     style={'fontFamily': 'Arial Narrow', 'fontSize': '12px'}),
 
                 html.P(children=[
                     html.Span(children=["Data: "], style={'fontWeight': 'bold', 'color': 'gray'}),
                     f"{cenario['data']}",
-                    html.Span(children=[" |"], style={'fontStyle': 'italic', 'color': 'black'})  # Estilizando o separador
+                    html.Span(children=[" |"], style={'fontStyle': 'italic', 'color': 'black'})
+                    # Estilizando o separador
                 ], className="card-text",
                     style={'fontFamily': 'Arial Narrow', 'fontSize': '12px'}),
 
                 html.P(children=[
                     html.Span(children=["Tipo: "], style={'fontWeight': 'bold', 'color': 'gray'}),
                     f"{cenario['tipo']}",
-                    html.Span(children=[" |"], style={'fontStyle': 'italic', 'color': 'black'})  # Estilizando o separador
+                    html.Span(children=[" |"], style={'fontStyle': 'italic', 'color': 'black'})
+                    # Estilizando o separador
                 ], className="card-text",
                     style={'fontFamily': 'Arial Narrow', 'fontSize': '12px'}),
             ],
@@ -232,8 +284,6 @@ def render_card(cenario) -> dbc.Card:
                     'padding': '5px'  # Um pouco mais de padding para garantir espaço interno
                 }
             ),
-
-
 
             # Botão de exclusão
             # dbc.Button(children=["🗑️"], id={"type": "delete-button", "index": cenario["id"]}, n_clicks=0, color="danger")

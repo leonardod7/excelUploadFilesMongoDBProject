@@ -5,6 +5,37 @@ import base64
 import io
 import dash_mantine_components as dmc
 
+# Importando classes de conexão, funções e CRUD ------------------------------------------------------------------------
+from dao.MongoCRUD_Teste import MongoDBCRUD
+from model.MongoConnection import MongoEolicasConnection, MongoSolarConnection, MongoHidroConnection
+from functions.funcoes import *
+
+# 1.2) Função para ler o arquivo Excel e gerar um DataFrame
+def parse_contents(contents: str):
+    """
+    Função para ler o arquivo Excel e gerar um DataFrame
+    :param contents: contents é uma string codificada em Base64, que contém o arquivo Excel
+    :return: Retorna um dataframe
+    """
+    content_type, content_string = contents.split(',')
+    decoded = base64.b64decode(content_string)
+    try:
+        # Lê o arquivo Excel
+        df = pd.read_excel(io.BytesIO(decoded))
+    except Exception as e:
+        return html.Div([
+            'Erro ao processar o arquivo: {}'.format(e)
+        ])
+
+    # Seleciona as 10 primeiras linhas
+    df = df.head(10)
+
+    # Converte as colunas de data para strings, caso existam
+    df.columns = [str(col) for col in df.columns]
+
+    # Retorna a tabela Dash
+    return df
+
 
 # 1) Criando página de inserção de documentos --------------------------------------------------------------------------
 
@@ -75,7 +106,7 @@ def inserir_documentos_page():
                                                                  'fontFamily': 'Arial Narrow'}),
                                                   dmc.TextInput(
                                                       id='id-input-nome-usina',
-                                                      w=360,
+                                                      w=470,
                                                       placeholder="Nome da Usina",
                                                       # leftSection=DashIconify(icon="ic:round-alternate-email"),
                                                       style={'marginBottom': '20px'}
@@ -85,7 +116,7 @@ def inserir_documentos_page():
                                                                  'fontFamily': 'Arial Narrow'}),
                                                   dmc.TextInput(
                                                       id='id-input-nome-cenario',
-                                                      w=360,
+                                                      w=470,
                                                       placeholder="Nome do Cenário",
                                                       # leftSection=DashIconify(icon="ic:round-alternate-email"),
                                                   )
@@ -156,7 +187,7 @@ def inserir_documentos_page():
                                                   dmc.Textarea(
                                                       id='id-textarea-descricao-cenario',
                                                       placeholder="Descreva o cenário......",
-                                                      w=1320,
+                                                      w=470,
                                                       autosize=True,
                                                       minRows=1,
                                                       maxRows=2,
@@ -170,9 +201,9 @@ def inserir_documentos_page():
                                   html.Div(
                                       className="insert-doc-page-div-parametros-3",
                                       children=[
-                                          html.H6(children=["Arraste e Solte o Arquivo Excel:"],
-                                                  style={'fontWeight': 'bold', 'color': 'gray',
-                                                         'fontFamily': 'Arial Narrow'}),
+                                          # html.H6(children=["Arraste e Solte o Arquivo Excel:"],
+                                          #         style={'fontWeight': 'bold', 'color': 'gray',
+                                          #                'fontFamily': 'Arial Narrow'}),
                                           dcc.Upload(
                                               id='id-upload-data',
                                               children=html.Div(
@@ -180,12 +211,12 @@ def inserir_documentos_page():
                                                   children=[
                                                       html.A('Arraste e solte um arquivo Excel no formato permitido'),
                                                       html.Img(src='assets/img/excel_icon.png',
-                                                               style={'width': '40px',
-                                                                      'height': '40px',
+                                                               style={'width': '30px',
+                                                                      'height': '30px',
                                                                       'margin-left': '10px'}),
                                                   ]),
                                               style={
-                                                  'width': '50%',
+                                                  'width': '80%',
                                                   'height': '60px',
                                                   'lineHeight': '60px',
                                                   'borderWidth': '1px',
@@ -204,10 +235,16 @@ def inserir_documentos_page():
                                   html.Div(
                                       className="insert-doc-page-div-parametros-4",
                                       children=[
-                                          html.Button(
-                                              className='btn-submit-doc',
-                                              id='id-btn-submit-doc',
-                                              children=['Salvar'], n_clicks=0)
+                                          dcc.ConfirmDialogProvider(
+                                              children=[
+                                                  html.Button(
+                                                      className='btn-submit-doc',
+                                                      id='id-btn-submit-doc',
+                                                      children=['Salvar'], n_clicks=0)
+                                              ],
+                                              id='id-confirm-doc',
+                                              message='Deseja salvar o cenário ?',
+                                              submit_n_clicks=0)
                                       ]),
 
                                   # 4) Div - Output
@@ -217,32 +254,8 @@ def inserir_documentos_page():
 
     return page
 
-
-# 1.2) Função para ler o arquivo Excel e gerar um DataFrame
-def parse_contents(contents: str):
-    """
-    Função para ler o arquivo Excel e gerar um DataFrame
-    :param contents: contents é uma string codificada em Base64, que contém o arquivo Excel
-    :return: Retorna um dataframe
-    """
-    content_type, content_string = contents.split(',')
-    decoded = base64.b64decode(content_string)
-    try:
-        # Lê o arquivo Excel
-        df = pd.read_excel(io.BytesIO(decoded))
-    except Exception as e:
-        return html.Div([
-            'Erro ao processar o arquivo: {}'.format(e)
-        ])
-
-    # Seleciona as 10 primeiras linhas
-    df = df.head(10)
-
-    # Converte as colunas de data para strings, caso existam
-    df.columns = [str(col) for col in df.columns]
-
-    # Retorna a tabela Dash
-    return df
+# era antes de colocarmos o ConfirmDialogProvider: Input(component_id='id-btn-submit-doc',
+# component_property='n_clicks')
 
 @callback(
     [Output(component_id='id-div-output-save', component_property='children'),
@@ -255,9 +268,22 @@ def parse_contents(contents: str):
      State(component_id='id-radio-items-sheetname-inserir-doc', component_property='value'),
      State(component_id='id-textarea-descricao-cenario', component_property='value'),
      State(component_id='id-upload-data', component_property='contents')],
-    Input(component_id='id-btn-submit-doc', component_property='n_clicks')
+    Input(component_id='id-confirm-doc', component_property='submit_n_clicks')
 )
 def get_info_file(banco, usina, cenario, sheetname, descricao, contents, n_clicks):
+    """
+    Função para identificar os inputs do banco, nome da usina, nome do cenário, nome das abas do arquivo Excel,
+    descrição do cenário, arquivo Excel e número de cliques no botão
+    :param banco:
+    :param usina:
+    :param cenario:
+    :param sheetname:
+    :param descricao:
+    :param contents:
+    :param n_clicks:
+    :return:
+    """
+
     if n_clicks > 0:
 
         error_usina = error_cenario = error_descricao = None
@@ -302,6 +328,44 @@ def get_info_file(banco, usina, cenario, sheetname, descricao, contents, n_click
             df = parse_contents(contents)
             # TODO: PRECISAMOS PREPAR O ARQUIVO EXCEL PARA SALVAR NO BANCO DE DADOS
 
+            # 3.2.1) Instanciando a classe de conexão com o banco de dados
+            cliente = MongoSolarConnection() if banco == 'Solar' else MongoEolicasConnection() if banco == 'Eólicas' \
+                else MongoHidroConnection()
+
+            # 3.2.2) Definindo o setor, nome da coleção, nome do cenário, descrição, nome da aba
+            setor: str = 'hidro' if banco == 'Hidrelétricas' else 'eolicas' if banco == 'Eólicas' else 'solar'
+            collection_name: str = usina
+            cenario_name: str = cenario
+            descricao_name: str = descricao
+            sheet_name: str = sheetname
+            demonstrativo: str = "Demonstração de Resultado" if sheet_name == "DRE" else "Fluxo de Caixa Direto" \
+                if sheet_name == "FCD" else "Balanço Patrimonial"
+            nome_segunda_coluna: str = "Driver"
+
+            # 3.2.3) Criar as partes do documento
+            # TODO: Precisamos criar a função criar_partes_documento considerando o arquivo Excel do drag and drop
+            documentos: list[dict] = criar_partes_documento_from_drag_and_drop(
+                df=df,
+                setor=setor,
+                empresa_nome=usina,
+                cenario_nome=cenario_name,
+                descricao_cenario=descricao_name,
+                sheet_name=sheet_name,
+                demonstrativo_name=demonstrativo,
+                nome_segunda_coluna=nome_segunda_coluna
+            )
+
+            # TODO: Validar o print para DRE, FCD e BP, para cada setor.
+            #  DRE está ok, falta validar BP e FCD
+            print(documentos)  # debug
+            # TODO Precisamos criar agora o processo para iterar e salvar cada documento no banco de dados
+
+            # 3.2.4) CRUD para salvar os documentos no banco de dados
+            crud = MongoDBCRUD(db_connection=cliente, collection_name=collection_name)
+
+
+
+
             # Exibir sucesso na interface e retornar os dados
             msg: html.Div = html.Div([
                 html.P(children=["Arquivo inserido com sucesso!"], style={'color': 'green'}),
@@ -316,9 +380,6 @@ def get_info_file(banco, usina, cenario, sheetname, descricao, contents, n_click
             return msg, None, None, None
 
     return no_update, None, None, None
-
-
-
 
 # CALLBACK SEM A VALIDAÇÃO DE CAMPOS VAZIOS EM VERMELHO
 # 1.3) Callback para identificar os inputs do banco, nome da usina, nome do cenário e sheetname:
