@@ -1,40 +1,13 @@
 # 0) Importando bibliotecas --------------------------------------------------------------------------------------------
 from dash import dcc, html, Input, Output, State, callback, ALL, no_update, callback_context, dash_table
 import pandas as pd
-import base64
-import io
 import dash_mantine_components as dmc
+import json
 
 # Importando classes de conexão, funções e CRUD ------------------------------------------------------------------------
 from dao.MongoCRUD_Teste import MongoDBCRUD
 from model.MongoConnection import MongoEolicasConnection, MongoSolarConnection, MongoHidroConnection
 from functions.funcoes import *
-
-# 1.2) Função para ler o arquivo Excel e gerar um DataFrame
-def parse_contents(contents: str):
-    """
-    Função para ler o arquivo Excel e gerar um DataFrame
-    :param contents: contents é uma string codificada em Base64, que contém o arquivo Excel
-    :return: Retorna um dataframe
-    """
-    content_type, content_string = contents.split(',')
-    decoded = base64.b64decode(content_string)
-    try:
-        # Lê o arquivo Excel
-        df = pd.read_excel(io.BytesIO(decoded))
-    except Exception as e:
-        return html.Div([
-            'Erro ao processar o arquivo: {}'.format(e)
-        ])
-
-    # Seleciona as 10 primeiras linhas
-    df = df.head(10)
-
-    # Converte as colunas de data para strings, caso existam
-    df.columns = [str(col) for col in df.columns]
-
-    # Retorna a tabela Dash
-    return df
 
 
 # 1) Criando página de inserção de documentos --------------------------------------------------------------------------
@@ -201,9 +174,6 @@ def inserir_documentos_page():
                                   html.Div(
                                       className="insert-doc-page-div-parametros-3",
                                       children=[
-                                          # html.H6(children=["Arraste e Solte o Arquivo Excel:"],
-                                          #         style={'fontWeight': 'bold', 'color': 'gray',
-                                          #                'fontFamily': 'Arial Narrow'}),
                                           dcc.Upload(
                                               id='id-upload-data',
                                               children=html.Div(
@@ -308,6 +278,14 @@ def get_info_file(banco, usina, cenario, sheetname, descricao, contents, n_click
             return msg, None, None, None
 
         # 3) Tentar ler o arquivo e verificar as abas
+        # if not contents.startswith('data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,'):
+        #     print("Erro: O arquivo não é um arquivo Excel válido.")
+        #     return html.Div([
+        #         'Erro: O arquivo não é um arquivo Excel válido.'
+        #     ])
+
+
+        # 3) Tentar ler o arquivo e verificar as abas
         try:
             content_type, content_string = contents.split(',')
             decoded = base64.b64decode(content_string)
@@ -325,45 +303,57 @@ def get_info_file(banco, usina, cenario, sheetname, descricao, contents, n_click
                 return msg, None, None, None
 
             # 3.2) Se o arquivo e as abas estão corretos, montar o dicionário e salvar no banco
-            df = parse_contents(contents)
-            # TODO: PRECISAMOS PREPAR O ARQUIVO EXCEL PARA SALVAR NO BANCO DE DADOS
-
-            # 3.2.1) Instanciando a classe de conexão com o banco de dados
-            cliente = MongoSolarConnection() if banco == 'Solar' else MongoEolicasConnection() if banco == 'Eólicas' \
-                else MongoHidroConnection()
-
-            # 3.2.2) Definindo o setor, nome da coleção, nome do cenário, descrição, nome da aba
-            setor: str = 'hidro' if banco == 'Hidrelétricas' else 'eolicas' if banco == 'Eólicas' else 'solar'
-            collection_name: str = usina
-            cenario_name: str = cenario
-            descricao_name: str = descricao
-            sheet_name: str = sheetname
-            demonstrativo: str = "Demonstração de Resultado" if sheet_name == "DRE" else "Fluxo de Caixa Direto" \
-                if sheet_name == "FCD" else "Balanço Patrimonial"
-            nome_segunda_coluna: str = "Driver"
-
-            # 3.2.3) Criar as partes do documento
-            # TODO: Precisamos criar a função criar_partes_documento considerando o arquivo Excel do drag and drop
-            documentos: list[dict] = criar_partes_documento_from_drag_and_drop(
-                df=df,
-                setor=setor,
-                empresa_nome=usina,
-                cenario_nome=cenario_name,
-                descricao_cenario=descricao_name,
-                sheet_name=sheet_name,
-                demonstrativo_name=demonstrativo,
-                nome_segunda_coluna=nome_segunda_coluna
-            )
-
-            # TODO: Validar o print para DRE, FCD e BP, para cada setor.
-            #  DRE está ok, falta validar BP e FCD
-            print(documentos)  # debug
-            # TODO Precisamos criar agora o processo para iterar e salvar cada documento no banco de dados
-
-            # 3.2.4) CRUD para salvar os documentos no banco de dados
-            crud = MongoDBCRUD(db_connection=cliente, collection_name=collection_name)
+            df = parse_contents(contents=contents, sheetname=sheetname)
 
 
+            print(df.columns)
+
+
+
+            # Até o print de cima, ambos estão iguais, o df usando na inserção manual e aqui
+
+            # # 3.2.1) Instanciando a classe de conexão com o banco de dados
+            # cliente = MongoSolarConnection() if banco == 'Solar' else MongoEolicasConnection() if banco == 'Eólicas' \
+            #     else MongoHidroConnection()
+            #
+            # # 3.2.3) Criar as partes do documento    criar_partes_documento_from_drag_and_drop
+            # documentos: list[dict] = criar_partes_documento2(
+            #     df=df,
+            #     setor='hidro' if banco == 'Hidrelétricas' else 'eolicas' if banco == 'Eólicas' else 'solar',
+            #     empresa_nome=usina,
+            #     cenario_nome=cenario,
+            #     descricao_cenario=descricao,
+            #     sheet_name=sheetname,
+            #     demonstrativo_name="Demonstração de Resultado" if sheetname == "DRE"
+            #     else "Fluxo de Caixa Direto" if sheetname == "FCD" else "Balanço Patrimonial",
+            #     nome_segunda_coluna="Driver"
+            # )
+
+            # # 3.2.4) CRUD para salvar os documentos no banco de dados
+            # crud = MongoDBCRUD(db_connection=cliente, collection_name=collection_name)
+            # doc_1 = documentos[0]
+            # # print(doc_1)  # debug
+            # unique_fields = {"empresa": collection_name, "nome": cenario_name, "tipo": sheet_name}
+            # crud.insert_document(document=doc_1, unique_fields=unique_fields)
+
+            # Verifique o conteúdo das variáveis chave
+            # print(f"Banco: {banco}, Usina: {usina}, Cenario: {cenario}, Sheetname: {sheetname}, Descricao: {descricao}")
+
+            # if len(documentos) == 0:
+            #     msg: html.Div = html.Div(children=["Erro: Nenhum documento foi gerado."], style={'color': 'red'})
+            #     return msg, None, None, None
+            #
+            # # print(f"Documentos gerados: {documentos}")  # Verifique o conteúdo de 'documentos'
+            # if documentos is None:
+            #     raise ValueError("A variável 'documentos' está com valor None.")
+            #
+            # crud = MongoDBCRUD(db_connection=cliente, collection_name=usina)
+            #
+            # for documento in documentos:
+            #     # print(f"Processando documento: {documento}")  # Verifique cada documento antes de salvar
+            #     unique_fields = {"empresa": usina, "nome": cenario, "tipo": sheetname}
+            #     # print(unique_fields)  # debug
+            #     crud.insert_document(document=documento, unique_fields=unique_fields)
 
 
             # Exibir sucesso na interface e retornar os dados
@@ -380,6 +370,19 @@ def get_info_file(banco, usina, cenario, sheetname, descricao, contents, n_click
             return msg, None, None, None
 
     return no_update, None, None, None
+
+    # TODO: Tentamos resolver o problema achando que poderia ser o formato das datas, mas não era
+    # df_2 = parse_contents(contents=contents, sheetname=sheetname)
+    # def format_dates_from_third_column(df):
+    #     # Itera sobre as colunas a partir da terceira (index 2)
+    #     for col in df.columns[2:]:
+    #         # Converte a coluna para o formato datetime
+    #         df[col] = pd.to_datetime(df[col], errors='coerce')  # 'coerce' para tratar erros como NaT
+    #     return df
+    #
+    # df_2 = format_dates_from_third_column(df=df_2)
+    # print(df_2.columns)
+
 
 # CALLBACK SEM A VALIDAÇÃO DE CAMPOS VAZIOS EM VERMELHO
 # 1.3) Callback para identificar os inputs do banco, nome da usina, nome do cenário e sheetname:

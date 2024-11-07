@@ -4,6 +4,8 @@ import dash_bootstrap_components as dbc
 from dash import dcc, html
 import dash_mantine_components as dmc
 from bson import ObjectId
+import base64
+import io
 
 from dao.MongoCRUD import MongoDBCRUD
 from model.MongoConnection import MongoEolicasConnection, MongoSolarConnection, MongoHidroConnection
@@ -116,6 +118,7 @@ def criar_partes_documento(file_path: str, setor: str, empresa_nome: str, cenari
 
     return lista
 
+
 # Essa função é a mesma que a de cima, porém, mais otimizada e com menos repetição de código. Além disso, ela parte do
 # arquivo no formato DataFrame, ao invés de carregar o arquivo Excel de um caminho.
 def criar_partes_documento_from_drag_and_drop(df: pd.DataFrame, setor: str, empresa_nome: str, cenario_nome: str,
@@ -162,8 +165,141 @@ def criar_partes_documento_from_drag_and_drop(df: pd.DataFrame, setor: str, empr
             "parte": i
         }
         partes.append(documento)
+    # print(partes)  # debug
 
     return partes
+
+
+def criar_partes_documento2(df: pd.DataFrame, setor: str, empresa_nome: str, cenario_nome: str,
+                            descricao_cenario: str, sheet_name: str, demonstrativo_name: str,
+                            nome_segunda_coluna: str) -> list[dict]:
+    """
+    O objetivo dessa função é transformar o demonstrativo de cada empresa em partes menores e torná-las documentos que possam ser salvos no MongoDB Atlas
+    sem o risco de ultrapassar o tamanho de array recomendado pelo MongoDB.
+
+    :param df: Caminho do arquivo Excel
+    :param setor: Setor da empresa (eolicas, solar, hidrelétrica, etc)
+    :param empresa_nome: Nome da empresa (SPE Moinhos de Vento, SPE Solar Leste, etc)
+    :param cenario_nome: Nome do cenário (Cenário 1, Cenário 2, etc)
+    :param descricao_cenario: Descrição do cenário (Cenário com investimento em novos parques eólicos)
+    :param sheet_name: Nome da aba do arquivo Excel (DRE, FCD, BP)
+    :param demonstrativo_name: Nome do demonstrativo (Demonstração de Resultado, Balanço Patrimonial, Fluxo de Caixa Direto)
+    :param nome_segunda_coluna: Nome da segunda coluna do demonstrativo (Driver)
+    :return: Retorna uma lista com dicionários referentes a cada parte do demonstrativo
+    """
+
+    # numero_colunas = dre.shape[1]
+    # print(numero_colunas)  # Mostra o número de colunas do DataFrame
+
+    # As duas primeiras colunas
+    colunas_iniciais = df.iloc[:, :2]
+
+    # Dividindo o DataFrame em três partes
+    df_part_1 = df.iloc[:, :50]  # As primeiras 70 colunas
+
+    chave_name = 'dre' if sheet_name == 'DRE' else 'bp' if sheet_name == 'BP' else 'fcd'
+
+    # Para as partes 2 e 3, concatenamos as duas primeiras colunas com as colunas específicas
+    df_part_2 = pd.concat([colunas_iniciais, df.iloc[:, 50:100]], axis=1)  # Duas primeiras + colunas 50 a 100
+    df_part_3 = pd.concat([colunas_iniciais, df.iloc[:, 100:150]], axis=1)  # Duas primeiras + colunas 100 a 150
+    df_part_4 = pd.concat([colunas_iniciais, df.iloc[:, 150:]], axis=1)  # Duas primeiras + colunas 152 em diante
+
+    # 1) Criando o primeiro documento --------------------------------------------------------------------------------
+
+    df_long_1 = df_part_1.melt(id_vars=[demonstrativo_name, nome_segunda_coluna], var_name='Data', value_name='Valor')
+    df_list_part_1 = df_long_1.to_dict(orient='records')
+
+    documento_spe_dre_part_1 = {
+        "nome": cenario_nome,
+        "descricao": descricao_cenario,
+        "data": datetime.now(),
+        "setor": setor,
+        "empresa": empresa_nome,
+        chave_name: df_list_part_1,
+        "tipo": chave_name,
+        "parte": 1
+    }
+
+    # 2) Criando o segundo documento ---------------------------------------------------------------------------------
+
+    df_long_2 = df_part_2.melt(id_vars=[demonstrativo_name, nome_segunda_coluna], var_name='Data', value_name='Valor')
+    df_list_part_2 = df_long_2.to_dict(orient='records')
+
+    documento_spe_dre_part_2 = {
+        "nome": cenario_nome,
+        "descricao": descricao_cenario,
+        "data": datetime.now(),
+        "setor": setor,
+        "empresa": empresa_nome,
+        chave_name: df_list_part_2,
+        "tipo": chave_name,
+        "parte": 2
+    }
+
+    # 3) Criando o terceiro documento --------------------------------------------------------------------------------
+
+    df_long_3 = df_part_3.melt(id_vars=[demonstrativo_name, nome_segunda_coluna], var_name='Data', value_name='Valor')
+    df_list_part_3 = df_long_3.to_dict(orient='records')
+
+    documento_spe_dre_part_3 = {
+        "nome": cenario_nome,
+        "descricao": descricao_cenario,
+        "data": datetime.now(),
+        "setor": setor,
+        "empresa": empresa_nome,
+        chave_name: df_list_part_3,
+        "tipo": chave_name,
+        "parte": 3
+    }
+
+    # 4) Criando o quarto documento ---------------------------------------------------------------------------------
+
+    df_long_4 = df_part_4.melt(id_vars=[demonstrativo_name, nome_segunda_coluna], var_name='Data', value_name='Valor')
+    df_list_part_4 = df_long_4.to_dict(orient='records')
+
+    documento_spe_dre_part_4 = {
+        "nome": cenario_nome,
+        "descricao": descricao_cenario,
+        "data": datetime.now(),
+        "setor": setor,
+        "empresa": empresa_nome,
+        chave_name: df_list_part_4,
+        "tipo": chave_name,
+        "parte": 4
+    }
+
+    lista: list = [documento_spe_dre_part_1, documento_spe_dre_part_2, documento_spe_dre_part_3,
+                   documento_spe_dre_part_4]
+
+    return lista
+
+
+def parse_contents(contents: str, sheetname: str | None = None) -> pd.DataFrame:
+    """
+    Função para ler o arquivo Excel e gerar um DataFrame de uma aba específica.
+    :param contents: contents é uma string codificada em Base64, que contém o arquivo Excel.
+    :param sheetname: Nome da aba do Excel que deseja carregar. Se None, carrega a primeira aba.
+    :return: Retorna um DataFrame ou uma mensagem de erro.
+    """
+
+    content_type, content_string = contents.split(',')
+    decoded = base64.b64decode(content_string)
+
+    try:
+        df = pd.read_excel(io.BytesIO(decoded), sheet_name=sheetname)
+        print("DataFrame carregado:")
+    except Exception as e:
+        print(e)
+        return html.Div([
+            'Erro ao processar o arquivo: {}'.format(e)
+        ])
+
+    # Converte as colunas de data para strings, caso existam
+    df.columns = [str(col) for col in df.columns]
+
+    return df
+
+
 
 
 def conectar_ao_banco(collection_name: str, database_name: str):
@@ -407,3 +543,132 @@ def stringify_object_ids(data):
             if '_id' in doc and isinstance(doc['_id'], ObjectId):
                 doc['_id'] = str(doc['_id'])
     return data
+
+
+
+# def parse_contents(contents: str, sheetname: str = 'DRE'):
+#     """
+#     Função para ler o arquivo Excel e gerar um DataFrame de uma aba específica.
+#     :param contents: contents é uma string codificada em Base64, que contém o arquivo Excel.
+#     :param sheetname: Nome da aba do Excel que deseja carregar. Se None, carrega a primeira aba.
+#     :return: Retorna um DataFrame ou uma mensagem de erro.
+#     """
+#     # Verificar se o arquivo é um Excel válido
+#     if not contents.startswith('data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,'):
+#         print("Erro: O arquivo não é um arquivo Excel válido.")
+#         return html.Div([
+#             'Erro: O arquivo não é um arquivo Excel válido.'
+#         ])
+#
+#     content_type, content_string = contents.split(',')
+#     decoded = base64.b64decode(content_string)
+#
+#     try:
+#         # Lê o arquivo Excel com a aba especificada pelo sheetname
+#         excel_file = io.BytesIO(decoded)
+#         excel_data = pd.ExcelFile(excel_file)
+#
+#         # Imprimir as abas disponíveis para ajudar no diagnóstico
+#         print("Abas disponíveis:", excel_data.sheet_names)
+#
+#         # Verificar se o sheetname existe, caso contrário, retornar erro
+#         if sheetname and sheetname not in excel_data.sheet_names:
+#             print(f"Erro: A aba {sheetname} não existe no arquivo.")
+#             return html.Div([
+#                 f'Erro: A aba {sheetname} não existe no arquivo.'
+#             ])
+#
+#         # Se sheetname for None, usar a primeira aba disponível
+#         if sheetname is None:
+#             sheetname = excel_data.sheet_names[0]
+#
+#         df = pd.read_excel(excel_file, sheet_name=sheetname)
+#         df = pd.DataFrame(df)
+#
+#     except Exception as e:
+#         print(f"Erro ao processar o arquivo: {str(e)}")
+#         return html.Div([
+#             'Erro ao processar o arquivo: {}'.format(e)
+#         ])
+#
+#     # Converte as colunas de data para strings, caso existam
+#     df.columns = [str(col) for col in df.columns]
+#
+#     return df
+
+
+# 1.2) Função para ler o arquivo Excel e gerar um DataFrame
+# def parse_contents(contents: str, sheetname: str = None):
+#     """
+#     Função para ler o arquivo Excel e gerar um DataFrame de uma aba específica.
+#     :param contents: contents é uma string codificada em Base64, que contém o arquivo Excel.
+#     :param sheetname: Nome da aba do Excel que deseja carregar. Se None, carrega a primeira aba.
+#     :return: Retorna um DataFrame ou uma mensagem de erro.
+#     """
+#     content_type, content_string = contents.split(',')
+#     decoded = base64.b64decode(content_string)
+#
+#     try:
+#         # Lê o arquivo Excel com a aba especificada pelo sheetname
+#         df = pd.read_excel(io.BytesIO(decoded), sheet_name=sheetname)
+#         print("DataFrame carregado:")
+#         print(df.head())
+#     except Exception as e:
+#         print(f"Erro ao processar o arquivo: {str(e)}")  # Adicionando o print do erro
+#         return html.Div([
+#             'Erro ao processar o arquivo: {}'.format(e)
+#         ])
+#
+#     # Converte as colunas de data para strings, caso existam
+#     # df.columns = [str(col) for col in df.columns]
+#
+#     return df
+
+
+
+#
+# def parse_contents3(contents: str, sheetname: str = None):
+#     """
+#     Função para ler o arquivo Excel e gerar um DataFrame de uma aba específica.
+#     :param contents: contents é uma string codificada em Base64, que contém o arquivo Excel.
+#     :param sheetname: Nome da aba do Excel que deseja carregar. Se None, carrega a primeira aba.
+#     :return: Retorna um DataFrame ou uma mensagem de erro.
+#     """
+#
+#     # Verificar se o arquivo é um Excel válido
+#     if not contents.startswith('data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,'):
+#         print("Erro: O arquivo não é um arquivo Excel válido.")
+#         return html.Div([
+#             'Erro: O arquivo não é um arquivo Excel válido.'
+#         ])
+#
+#     content_type, content_string = contents.split(',')
+#     decoded = base64.b64decode(content_string)
+#
+#     try:
+#         # Lê o arquivo Excel com a aba especificada pelo sheetname
+#         excel_file = io.BytesIO(decoded)
+#         excel_data = pd.ExcelFile(excel_file)
+#
+#         # Imprimir as abas disponíveis para ajudar no diagnóstico
+#         print("Abas disponíveis:", excel_data.sheet_names)
+#
+#         # Verificar se o sheetname existe
+#         if sheetname not in excel_data.sheet_names:
+#             print(f"Erro: A aba {sheetname} não existe no arquivo.")
+#             return html.Div([
+#                 f'Erro: A aba {sheetname} não existe no arquivo.'
+#             ])
+#
+#         df = pd.read_excel(excel_file, sheet_name=sheetname)
+#
+#     except Exception as e:
+#         print(f"Erro ao processar o arquivo: {str(e)}")
+#         return html.Div([
+#             'Erro ao processar o arquivo: {}'.format(e)
+#         ])
+#
+#     # Converte as colunas de data para strings, caso existam
+#     df.columns = [str(col) for col in df.columns]
+#
+#     return df
