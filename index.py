@@ -2,7 +2,7 @@
 from dash import html, Input, Output, State, dash, dcc, page_registry, _dash_renderer
 import dash_mantine_components as dmc
 from pages.listar_documento import consultar_documentos_page
-from pages.inserir_documentos import inserir_documentos_page
+from pages.inserir_documentos2 import inserir_documentos_page
 _dash_renderer._set_react_version("18.2.0")
 
 # Importando componentes do app ----------------------------------------------------------------------------------------
@@ -38,7 +38,9 @@ app.layout = dmc.MantineProvider(
     Input(component_id='url', component_property='pathname')
 )
 def display_page(pathname):
-    if pathname == '/inserir-documento':
+    if pathname is None:
+        return html.H3("Erro: Caminho não definido.")
+    elif pathname == '/inserir-documento':
         return inserir_documentos_page()
     elif pathname == '/consultar-documentos':
         return consultar_documentos_page()

@@ -3,6 +3,9 @@ from dash import dcc, html, Input, Output, State, callback, ALL, no_update, call
 import pandas as pd
 import dash_mantine_components as dmc
 import json
+import base64
+import io
+
 
 # Importando classes de conexão, funções e CRUD ------------------------------------------------------------------------
 from dao.MongoCRUD_Teste import MongoDBCRUD
@@ -278,82 +281,74 @@ def get_info_file(banco, usina, cenario, sheetname, descricao, contents, n_click
             return msg, None, None, None
 
         # 3) Tentar ler o arquivo e verificar as abas
-        # if not contents.startswith('data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,'):
-        #     print("Erro: O arquivo não é um arquivo Excel válido.")
-        #     return html.Div([
-        #         'Erro: O arquivo não é um arquivo Excel válido.'
-        #     ])
-
-
-        # 3) Tentar ler o arquivo e verificar as abas
         try:
+
+            # content_type, content_string = contents.split(',')
+            # decoded = base64.b64decode(content_string)
+            # excel_data = pd.ExcelFile(io.BytesIO(decoded))
+            #
+            # # # 3.1) Verificar se as abas necessárias estão presentes
+            # # required_sheets = {"DRE", "FCD", "BP"}
+            # # missing_sheets = required_sheets - set(excel_data.sheet_names)
+            # #
+            # # if missing_sheets:
+            # #     msg: html.Div = html.Div(
+            # #         children=[f"Erro: O arquivo não contém as abas necessárias: {', '.join(missing_sheets)}."],
+            # #         style={'color': 'red'}
+            # #     )
+            # #     return msg, None, None, None
+            # #
+            # # # 3.2) Se o arquivo e as abas estão corretos, montar o dicionário e salvar no banco
+            # # df = parse_contents(contents=contents, sheetname=sheetname)
+            # # print(df)  # debug
+            # # # print(df.columns)
+
             content_type, content_string = contents.split(',')
             decoded = base64.b64decode(content_string)
-            excel_data = pd.ExcelFile(io.BytesIO(decoded))
-
-            # 3.1) Verificar se as abas necessárias estão presentes
-            required_sheets = {"DRE", "FCD", "BP"}
-            missing_sheets = required_sheets - set(excel_data.sheet_names)
-
-            if missing_sheets:
-                msg: html.Div = html.Div(
-                    children=[f"Erro: O arquivo não contém as abas necessárias: {', '.join(missing_sheets)}."],
-                    style={'color': 'red'}
-                )
-                return msg, None, None, None
-
-            # 3.2) Se o arquivo e as abas estão corretos, montar o dicionário e salvar no banco
-            df = parse_contents(contents=contents, sheetname=sheetname)
-
-
-            print(df.columns)
-
+            df = pd.read_excel(io.BytesIO(decoded), sheet_name=sheetname, engine='openpyxl')
+            # Converte as colunas de data para strings, caso existam
+            df.columns = [str(col) for col in df.columns]
 
 
             # Até o print de cima, ambos estão iguais, o df usando na inserção manual e aqui
 
-            # # 3.2.1) Instanciando a classe de conexão com o banco de dados
-            # cliente = MongoSolarConnection() if banco == 'Solar' else MongoEolicasConnection() if banco == 'Eólicas' \
-            #     else MongoHidroConnection()
-            #
-            # # 3.2.3) Criar as partes do documento    criar_partes_documento_from_drag_and_drop
-            # documentos: list[dict] = criar_partes_documento2(
-            #     df=df,
-            #     setor='hidro' if banco == 'Hidrelétricas' else 'eolicas' if banco == 'Eólicas' else 'solar',
-            #     empresa_nome=usina,
-            #     cenario_nome=cenario,
-            #     descricao_cenario=descricao,
-            #     sheet_name=sheetname,
-            #     demonstrativo_name="Demonstração de Resultado" if sheetname == "DRE"
-            #     else "Fluxo de Caixa Direto" if sheetname == "FCD" else "Balanço Patrimonial",
-            #     nome_segunda_coluna="Driver"
-            # )
+            # 3.2.1) Instanciando a classe de conexão com o banco de dados
+            cliente = MongoSolarConnection() if banco == 'Solar' else MongoEolicasConnection() if banco == 'Eólicas' \
+                else MongoHidroConnection()
 
-            # # 3.2.4) CRUD para salvar os documentos no banco de dados
-            # crud = MongoDBCRUD(db_connection=cliente, collection_name=collection_name)
-            # doc_1 = documentos[0]
-            # # print(doc_1)  # debug
-            # unique_fields = {"empresa": collection_name, "nome": cenario_name, "tipo": sheet_name}
-            # crud.insert_document(document=doc_1, unique_fields=unique_fields)
+            cliente.connect_to_db()
 
-            # Verifique o conteúdo das variáveis chave
-            # print(f"Banco: {banco}, Usina: {usina}, Cenario: {cenario}, Sheetname: {sheetname}, Descricao: {descricao}")
+            # 3.2.3) Criar as partes do documento    criar_partes_documento_from_drag_and_drop
+            documentos: list[dict] = criar_partes_documento2(
+                df=df,
+                setor='hidro' if banco == 'Hidrelétricas' else 'eolicas' if banco == 'Eólicas' else 'solar',
+                empresa_nome=usina,
+                cenario_nome=cenario,
+                descricao_cenario=descricao,
+                sheet_name=sheetname,
+                demonstrativo_name="Demonstração de Resultado" if sheetname == "DRE"
+                else "Fluxo de Caixa Direto" if sheetname == "FCD" else "Balanço Patrimonial",
+                nome_segunda_coluna="Driver"
+            )
 
-            # if len(documentos) == 0:
-            #     msg: html.Div = html.Div(children=["Erro: Nenhum documento foi gerado."], style={'color': 'red'})
-            #     return msg, None, None, None
-            #
-            # # print(f"Documentos gerados: {documentos}")  # Verifique o conteúdo de 'documentos'
-            # if documentos is None:
-            #     raise ValueError("A variável 'documentos' está com valor None.")
-            #
-            # crud = MongoDBCRUD(db_connection=cliente, collection_name=usina)
-            #
-            # for documento in documentos:
-            #     # print(f"Processando documento: {documento}")  # Verifique cada documento antes de salvar
-            #     unique_fields = {"empresa": usina, "nome": cenario, "tipo": sheetname}
-            #     # print(unique_fields)  # debug
-            #     crud.insert_document(document=documento, unique_fields=unique_fields)
+            if len(documentos) == 0:
+                msg: html.Div = html.Div(children=["Erro: Nenhum documento foi gerado."], style={'color': 'red'})
+                return msg, None, None, None
+
+            # print(f"Documentos gerados: {documentos}")  # Verifique o conteúdo de 'documentos'
+            if documentos is None:
+                raise ValueError("A variável 'documentos' está com valor None.")
+
+            crud = MongoDBCRUD(db_connection=cliente, collection_name=usina)
+
+            for documento in documentos:
+                if documento is None:
+                    raise ValueError("A variável 'documento' está com valor None.")
+                else:
+                    # print(f"Processando documento: {documento}")  # Verifique cada documento antes de salvar
+                    unique_fields = {"empresa": usina, "nome": cenario, "tipo": sheetname}
+                    # print(unique_fields)  # debug
+                    crud.insert_document(document=documento, unique_fields=unique_fields)
 
 
             # Exibir sucesso na interface e retornar os dados
@@ -370,6 +365,15 @@ def get_info_file(banco, usina, cenario, sheetname, descricao, contents, n_click
             return msg, None, None, None
 
     return no_update, None, None, None
+
+
+
+    # # 3.2.4) CRUD para salvar os documentos no banco de dados
+    # crud = MongoDBCRUD(db_connection=cliente, collection_name=collection_name)
+    # doc_1 = documentos[0]
+    # # print(doc_1)  # debug
+    # unique_fields = {"empresa": collection_name, "nome": cenario_name, "tipo": sheet_name}
+    # crud.insert_document(document=doc_1, unique_fields=unique_fields)
 
     # TODO: Tentamos resolver o problema achando que poderia ser o formato das datas, mas não era
     # df_2 = parse_contents(contents=contents, sheetname=sheetname)

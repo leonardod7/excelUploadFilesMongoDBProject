@@ -243,29 +243,30 @@ if __name__ == '__main__':
 
     df = pd.read_excel('/Users/leonardo/Documents/PyCharm/Github/excelUploadFilesMongoDBProject/files/'
                        'SPE_1_Cenario1.xlsx', sheet_name='DRE')
-    print(df.columns)
+    # print(df.columns)
+    # print(df)
 
 
     # print(type(df))  # <class 'pandas.core.frame.DataFrame'>
 
-    # documentos: list[dict] = criar_partes_documento2(
-    #     df=df,
-    #     setor=setor,
-    #     empresa_nome=collection_name,
-    #     cenario_nome=cenario_name,
-    #     descricao_cenario=descricao,
-    #     sheet_name=sheet_name,
-    #     demonstrativo_name=demonstrativo,
-    #     nome_segunda_coluna=nome_segunda_coluna
-    # )
-    # print(documentos[0])
+    documentos: list[dict] = criar_partes_documento2(
+        df=df,
+        setor=setor,
+        empresa_nome=collection_name,
+        cenario_nome=cenario_name,
+        descricao_cenario=descricao,
+        sheet_name=sheet_name,
+        demonstrativo_name=demonstrativo,
+        nome_segunda_coluna=nome_segunda_coluna
+    )
+    print(documentos[0])
 
     #
-    # for documento in documentos:
-    #     # print(documento)
-    #     unique_fields = {"empresa": collection_name, "nome": cenario_name, "tipo": sheet_name}
-    #     # print(unique_fields)
-    #     eolicas_crud.insert_document(document=documento, unique_fields=unique_fields)
+    for documento in documentos:
+        # print(documento)
+        unique_fields = {"empresa": collection_name, "nome": cenario_name, "tipo": sheet_name}
+        # print(unique_fields)
+        eolicas_crud.insert_document(document=documento, unique_fields=unique_fields)
 
 
     # 2) Consulta de Dados  --------------------------------------------------------------------------------------------

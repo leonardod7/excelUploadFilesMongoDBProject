@@ -1,12 +1,6 @@
 # Importando bibliotecas ----------------------------------------------------------------------------------------------
-from datetime import datetime
-from bson.objectid import ObjectId
-from pymongo import MongoClient
-import pandas as pd
 
 # Importando classes de conexão, funções e CRUD ------------------------------------------------------------------------
-from dao.MongoCRUD import MongoDBCRUD
-from model.MongoConnection import MongoEolicasConnection, MongoSolarConnection, MongoHidroConnection
 from functions.funcoes import *
 
 # Instanciando as classes de conexão e CRUD ----------------------------------------------------------------------------

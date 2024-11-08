@@ -51,6 +51,10 @@ class MongoDBCRUD:
         :param unique_fields: Dicionário contendo os campos 'empresa', 'nome' e outros pelos quais queremos verificar duplicidade.
         :return: Documento inserido ou o documento existente caso já tenha sido inserido anteriormente.
         """
+
+        if unique_fields is None:
+            raise ValueError("Os campos únicos para verificação não foram fornecidos.")
+
         collection = self.get_collection()
 
         # Verifica se o documento contém o campo 'parte' e combina com os campos únicos
@@ -130,6 +134,20 @@ class MongoDBCRUD:
         response: str = f"{data.deleted_count} documento foi deletado."
 
         return response
+
+    def insert_one(self, document: dict) -> dict:
+        """
+        Função que insere um único documento na coleção.
+        :param document: Documento que queremos inserir.
+        :return: Documento inserido.
+        """
+        collection = self.get_collection()
+
+        # Inserção do documento
+        collection.insert_one(document)
+        print(f"Documento inserido com sucesso.")
+
+        return document
 
 
 # Testando a conexão como o Mongo DB Atlas -----------------------------------------------------------------------------

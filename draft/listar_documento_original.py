@@ -1,9 +1,7 @@
-from dash import dcc, html, Input, Output, State, callback
-import dash_mantine_components as dmc
+from dash import dcc, html, Input, Output, callback
 from model.MongoConnection import MongoEolicasConnection, MongoSolarConnection, MongoHidroConnection
-from dao.MongoCRUD import MongoDBCRUD
+from draft.MongoCRUD import MongoDBCRUD
 from app import cache  # Importar o cache configurado
-from dash.exceptions import PreventUpdate
 
 # 1) Acessando o banco de dados no MongoDB Atlas - Eólicas -------------------------------------------------------------
 
