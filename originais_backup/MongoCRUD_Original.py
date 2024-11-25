@@ -79,6 +79,7 @@ class MongoDBCRUD:
         collection.insert_one(document)
         print(f"Documento com parte {document['parte']} inserido com sucesso.")
 
+
         return document
 
     def delete_all_documents(self):
@@ -170,9 +171,6 @@ if __name__ == '__main__':
 
     # Fechando a conexão
     cliente.close_connection()
-
-
-# Original
 
 
 # Original

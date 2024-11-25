@@ -7,7 +7,7 @@ from bson import ObjectId
 import base64
 import io
 
-from draft.MongoCRUD import MongoDBCRUD
+from dao.MongoCRUD import MongoDBCRUD
 from model.MongoConnection import MongoEolicasConnection, MongoSolarConnection, MongoHidroConnection
 
 
@@ -300,8 +300,6 @@ def parse_contents(contents: str, sheetname: str | None = None) -> pd.DataFrame:
     return df
 
 
-
-
 def conectar_ao_banco(collection_name: str, database_name: str):
     if database_name == 'Eólicas':
         cliente = MongoEolicasConnection()
@@ -545,130 +543,3 @@ def stringify_object_ids(data):
     return data
 
 
-
-# def parse_contents(contents: str, sheetname: str = 'DRE'):
-#     """
-#     Função para ler o arquivo Excel e gerar um DataFrame de uma aba específica.
-#     :param contents: contents é uma string codificada em Base64, que contém o arquivo Excel.
-#     :param sheetname: Nome da aba do Excel que deseja carregar. Se None, carrega a primeira aba.
-#     :return: Retorna um DataFrame ou uma mensagem de erro.
-#     """
-#     # Verificar se o arquivo é um Excel válido
-#     if not contents.startswith('data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,'):
-#         print("Erro: O arquivo não é um arquivo Excel válido.")
-#         return html.Div([
-#             'Erro: O arquivo não é um arquivo Excel válido.'
-#         ])
-#
-#     content_type, content_string = contents.split(',')
-#     decoded = base64.b64decode(content_string)
-#
-#     try:
-#         # Lê o arquivo Excel com a aba especificada pelo sheetname
-#         excel_file = io.BytesIO(decoded)
-#         excel_data = pd.ExcelFile(excel_file)
-#
-#         # Imprimir as abas disponíveis para ajudar no diagnóstico
-#         print("Abas disponíveis:", excel_data.sheet_names)
-#
-#         # Verificar se o sheetname existe, caso contrário, retornar erro
-#         if sheetname and sheetname not in excel_data.sheet_names:
-#             print(f"Erro: A aba {sheetname} não existe no arquivo.")
-#             return html.Div([
-#                 f'Erro: A aba {sheetname} não existe no arquivo.'
-#             ])
-#
-#         # Se sheetname for None, usar a primeira aba disponível
-#         if sheetname is None:
-#             sheetname = excel_data.sheet_names[0]
-#
-#         df = pd.read_excel(excel_file, sheet_name=sheetname)
-#         df = pd.DataFrame(df)
-#
-#     except Exception as e:
-#         print(f"Erro ao processar o arquivo: {str(e)}")
-#         return html.Div([
-#             'Erro ao processar o arquivo: {}'.format(e)
-#         ])
-#
-#     # Converte as colunas de data para strings, caso existam
-#     df.columns = [str(col) for col in df.columns]
-#
-#     return df
-
-
-# 1.2) Função para ler o arquivo Excel e gerar um DataFrame
-# def parse_contents(contents: str, sheetname: str = None):
-#     """
-#     Função para ler o arquivo Excel e gerar um DataFrame de uma aba específica.
-#     :param contents: contents é uma string codificada em Base64, que contém o arquivo Excel.
-#     :param sheetname: Nome da aba do Excel que deseja carregar. Se None, carrega a primeira aba.
-#     :return: Retorna um DataFrame ou uma mensagem de erro.
-#     """
-#     content_type, content_string = contents.split(',')
-#     decoded = base64.b64decode(content_string)
-#
-#     try:
-#         # Lê o arquivo Excel com a aba especificada pelo sheetname
-#         df = pd.read_excel(io.BytesIO(decoded), sheet_name=sheetname)
-#         print("DataFrame carregado:")
-#         print(df.head())
-#     except Exception as e:
-#         print(f"Erro ao processar o arquivo: {str(e)}")  # Adicionando o print do erro
-#         return html.Div([
-#             'Erro ao processar o arquivo: {}'.format(e)
-#         ])
-#
-#     # Converte as colunas de data para strings, caso existam
-#     # df.columns = [str(col) for col in df.columns]
-#
-#     return df
-
-
-
-#
-# def parse_contents3(contents: str, sheetname: str = None):
-#     """
-#     Função para ler o arquivo Excel e gerar um DataFrame de uma aba específica.
-#     :param contents: contents é uma string codificada em Base64, que contém o arquivo Excel.
-#     :param sheetname: Nome da aba do Excel que deseja carregar. Se None, carrega a primeira aba.
-#     :return: Retorna um DataFrame ou uma mensagem de erro.
-#     """
-#
-#     # Verificar se o arquivo é um Excel válido
-#     if not contents.startswith('data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,'):
-#         print("Erro: O arquivo não é um arquivo Excel válido.")
-#         return html.Div([
-#             'Erro: O arquivo não é um arquivo Excel válido.'
-#         ])
-#
-#     content_type, content_string = contents.split(',')
-#     decoded = base64.b64decode(content_string)
-#
-#     try:
-#         # Lê o arquivo Excel com a aba especificada pelo sheetname
-#         excel_file = io.BytesIO(decoded)
-#         excel_data = pd.ExcelFile(excel_file)
-#
-#         # Imprimir as abas disponíveis para ajudar no diagnóstico
-#         print("Abas disponíveis:", excel_data.sheet_names)
-#
-#         # Verificar se o sheetname existe
-#         if sheetname not in excel_data.sheet_names:
-#             print(f"Erro: A aba {sheetname} não existe no arquivo.")
-#             return html.Div([
-#                 f'Erro: A aba {sheetname} não existe no arquivo.'
-#             ])
-#
-#         df = pd.read_excel(excel_file, sheet_name=sheetname)
-#
-#     except Exception as e:
-#         print(f"Erro ao processar o arquivo: {str(e)}")
-#         return html.Div([
-#             'Erro ao processar o arquivo: {}'.format(e)
-#         ])
-#
-#     # Converte as colunas de data para strings, caso existam
-#     df.columns = [str(col) for col in df.columns]
-#
-#     return df

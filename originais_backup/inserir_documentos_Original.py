@@ -1,7 +1,15 @@
 # 0) Importando bibliotecas --------------------------------------------------------------------------------------------
 from dash import dcc, html, Input, Output, State, callback, ALL, no_update, callback_context, dash_table
+import pandas as pd
+import dash_mantine_components as dmc
+import json
+import base64
+import io
+
 
 # Importando classes de conexão, funções e CRUD ------------------------------------------------------------------------
+from dao.MongoCRUD import MongoDBCRUD
+from model.MongoConnection import MongoEolicasConnection, MongoSolarConnection, MongoHidroConnection
 from functions.funcoes import *
 
 

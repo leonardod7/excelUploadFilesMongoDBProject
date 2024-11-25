@@ -15,11 +15,19 @@ collection_hidro_base_name: str = "UHE 1"
 
 
 # 2) Página de consultar documentos ------------------------------------------------------------------------------------
-def consultar_documentos_page() -> html.Div:
+def consultar_documentos_page():
     page: html.Div = html.Div(
         id="id-upload-section-page",
         className="consult-section-page",
         children=[
+
+            # Div - 0 -------------------------------------------------------------------------------------------
+            html.Div(
+                className="consult-section-page-0",
+                children=[
+
+                ]),
+
             # Div - 1 -------------------------------------------------------------------------------------------
             html.Div(
                 className="consult-section-page-1",
@@ -148,7 +156,6 @@ def upload_data_from_mongo_to_store(db_name, colecoes_div, collection):
     Input(component_id='id-radio-items-bancos', component_property='value')
 )
 def listar_colecoes_radio_items(value):
-
     if value == 'Eólicas':
 
         # Nome da coleção no cache
@@ -162,6 +169,7 @@ def listar_colecoes_radio_items(value):
             try:
                 colecoes = eolicas_crud.list_collections()
                 print(colecoes)
+                cache.set(colecao_name, colecoes)  # Armazena no cache
             finally:
                 cliente.close_connection()  # Fecha a conexão ao banco de dados
 
@@ -198,6 +206,7 @@ def listar_colecoes_radio_items(value):
                                                     database_name=value)
             try:
                 colecoes = solar_crud.list_collections()
+                cache.set(colecao_name, colecoes)  # Armazena no cache
             finally:
                 cliente.close_connection()
 
@@ -234,6 +243,7 @@ def listar_colecoes_radio_items(value):
                                                     database_name=value)
             try:
                 colecoes = hidro_crud.list_collections()
+                cache.set(colecao_name, colecoes)  # Armazena no cache
             finally:
                 cliente.close_connection()
 
@@ -377,15 +387,19 @@ def deletar_documento(n_clicks, list_banco_collection, data):
     return data
 
 
-# TODO: Precisamos fazer com que ao deletar uma coleção, o radioitems seja atualizado imediatamente sem precisar
-#  alterar de banco de dados para ver que atualizou. É apenas uma atualização de estado, não impacta o app.
 
-# TODO: Criar uma mensagem de confirmação para deletar um documento. Pode ser um modal ou um toast. A mensagem deve
-#  retornar sucesso ou documento exisitente.
 
-# TODO: Ao invés de mostrar todos os documentos de uma coleção, devemos mostrar um único documento que represente todos
-# os documentos segregados. Por exemplo, se temos 4 documentos de um mesmo cenário, devemos mostrar apenas um documento.
-# Teremos no final com a DRE, BP e FCD, apenas 3 documentos.
+
+
+# TODO: Precisamos fazer com que ao deletar uma coleção, o radioitems seja atualizado imediatamente
+#  sem precisar alterar de banco de dados para ver que atualizou. Isso é importante para que o usuário saiba
+#  que a coleção foi deletada e não está mais disponível.
+
+# Vamos construir um callback que atualize o radioitems com as coleções disponíveis após deletar uma coleção
+
+
+
+
 
 
 
