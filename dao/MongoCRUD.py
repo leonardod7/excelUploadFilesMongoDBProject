@@ -162,7 +162,7 @@ if __name__ == '__main__':
     cliente.connect_to_db()
     db_connection = cliente.get_db_connection()
 
-    collection_name: str = "SPE Brisa Forte"
+    collection_name: str = "SPE Carazinho"
     eolicas_crud = MongoDBCRUD(db_connection=cliente, collection_name=collection_name)
 
     print("Coleções no banco de dados:")

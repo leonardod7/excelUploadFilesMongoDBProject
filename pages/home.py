@@ -1,6 +1,7 @@
-from dash import dcc, html, Input, Output, State, callback, ALL, no_update, callback_context
+from dash import dcc, html, Input, Output, State, callback, ALL, no_update, callback_context, dash_table
 import dash_mantine_components as dmc
 from functions.funcoes import conectar_ao_banco
+from functions.funcoes_aux_table import preparar_df_formatado_para_table
 
 # 1) Dados iniciais das coleções ---------------------------------------------------------------------------------------
 # Usamos um nome base para cada coleção para que não tenhamos erro, pois precisamos passar um nome de coleção inicial
@@ -81,6 +82,7 @@ def home_page() -> html.Div:
                                      w=450,
                                      mt="xs",
                                      radius="sm",
+
                                  )
                              ]),
 
@@ -176,11 +178,41 @@ def update_spe_dropdown(banco: str):
 )
 def update_spe_dfs(banco: str, spe: str):
     if banco == 'Eólicas':
-        msg: html.Div = html.Div(
-            children=[html.H6(f"Mostrando dados da SPE {spe} referente ao banco de dados {banco}.")])
-        # TODO: Implementar a apresentação dos dados em formato de tabela.
+        tabela_dre = preparar_df_formatado_para_table(
+            collection_name=spe,
+            banco=banco,
+            tipo="dre",
+            chave="dre",
+            conta_index="Demonstração de Resultado"
+        )
+        # tabela_bp = preparar_df_formatado_para_table(
+        #     collection_name=spe,
+        #     banco=banco,
+        #     tipo="bp",
+        #     chave="bp",
+        #     conta_index="Balanço Patrimonial"
+        # )
+        # tabela_fcd = preparar_df_formatado_para_table(
+        #     collection_name=spe,
+        #     banco=banco,
+        #     tipo="fcd",
+        #     chave="fcd",
+        #     conta_index="Fluxo de Caixa Direto"
+        # )
+        dash_table_dre = dash_table.DataTable(data=tabela_dre.to_dict('records'), page_size=5)
+        # dash_table_bp = dash_table.DataTable(data=tabela_bp.to_dict('records'), page_size=5)
+        # dash_table_fcd = dash_table.DataTable(data=tabela_fcd.to_dict('records'), page_size=5)
 
-        return msg
+        div_retorno = html.Div(
+            children=[
+                html.H6(f"Mostrando dados da SPE {spe} referente ao banco de dados {banco}."),
+                dash_table_dre,
+                # dash_table_bp,
+                # dash_table_fcd
+            ]
+        )
+
+        return div_retorno
 
     elif banco == 'Solar':
         msg: html.Div = html.Div(
