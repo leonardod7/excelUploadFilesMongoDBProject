@@ -45,7 +45,7 @@ Os arquivos deverão seguir um padrão de formatação e a aplicação deverá r
 - O back-end da aplicação deverá ser desenvolvida em Python.
 - O front-end da aplicação deverá ser desenvolvida em Dash Plotly.
 - A aplicação deverá ser desenvolvida utilizando o framework Flask.
-- A aplicação deverá ser desenvolvida utilizando o padrão de arquitetura MVC (Model-View-Controller).
+- A aplicação poderá ser desenvolvida utilizando o padrão de arquitetura MVC (Model-View-Controller).
 
 Estamos utilizando esse conceito no projeto, onde o DAO lida com o acesso ao banco de dados, as classes como SPE representam o modelo de negócio e o Dash atua como uma camada de visualização (View)
 

@@ -29,6 +29,20 @@
     /*border: 1px solid black;*/
 }
 
+.home-section-page-3 {
+    width: 30%;
+    /*border: 1px solid black;*/
+}
+
+.home-section-page-4 {
+    width: 100%;
+    height: 40px;
+    /*border: 4px solid green;*/
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+}
+
 
 .custom-dropdown-spe-home-page {
     color: gray;
@@ -44,4 +58,21 @@
     margin-top: 20px;
     flex-direction: column;
 
+}
+
+.dash-loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.home-btn-submit-doc {
+    width: 150px;
+    height: 30px;
+    background: gold;
+    color: gray;
+    border: none;
+    border-radius: 10px;
+    font-size: 14px;
+    cursor: pointer;
 }

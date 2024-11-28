@@ -10,11 +10,9 @@ collection_eolicas_base_name: str = "SPE Ventos da Serra"
 collection_solar_base_name: str = "Parque Solar 1"
 collection_hidro_base_name: str = "UHE 1"
 
-# TODO: Fazer callback para manter o estado das informações selecionadas pelo usuário na sua sessão.
+# TODO: Fazer callback para manter o estado selecionado do dropdown conforme a SPE escolhida em um dcc.Store.
 # TODO: Temos que pensar em como otimizar o consumo de dados no mongo db.
-# TODO: Temos que atualizar o estado quando inserimos uma informação e ela retorna "Arquivo Inserido com Sucesso",
-#  na página inserir documento.
-
+# TODO: Temos que atualizar o estado quando inserimos uma informação e ela retorna "Arquivo Inserido com Sucesso".
 
 def home_page() -> html.Div:
     page: html.Div = html.Div(
@@ -110,29 +108,14 @@ def home_page() -> html.Div:
                              ]),
 
                      ]),
-            html.Div(className="home-section-page-4",
+
+            html.Div(className="home-section-page-dfs-0",
+                     id="id-home-section-page-dfs-0",
                      children=[
-                         html.Button(
-                             className='btn-submit-doc',
-                             id='id-home-btn-processar',
-                             children=['Atualizar'],
-                             n_clicks=0,
-                             # style={'display': 'block', 'marginTop': '20px'}
-                         ),
+                         # TODO: DRE, BP e FCD.
+
                      ]),
 
-            dcc.Loading(
-                id="loading",
-                type="circle",  # Tipos disponíveis: "default", "circle", "dot"
-                children=[
-                    html.Div(className="home-section-page-dfs-0",
-                             id="id-home-section-page-dfs-0",
-                             children=[
-                                 # TODO: DRE, BP e FCD.
-
-                             ]),
-                ],
-            ),
         ])
 
     return page
@@ -231,64 +214,58 @@ def update_cenario_dropdown(spe: str):
     return lista_valores, valor_default
 
 
-# # 3) Callback para apresentar os dados de cada SPE conforme escolha do banco de dados.
+# 3) Callback para apresentar os dados de cada SPE conforme escolha do banco de dados.
 @callback(
     Output(component_id="id-home-section-page-dfs-0", component_property="children"),
-    Input(component_id="id-home-btn-processar", component_property="n_clicks"),
-    [State(component_id="id-radio-items-bancos-home-page", component_property="value"),
-     State(component_id="id-dropdown-spe-home-page", component_property="value"),
-     State(component_id="id-dropdown-cenario-spe-home-page", component_property="value")],
+    Input(component_id="id-radio-items-bancos-home-page", component_property="value"),
+    Input(component_id="id-dropdown-spe-home-page", component_property="value"),
+    Input(component_id="id-dropdown-cenario-spe-home-page", component_property="value"),
+
 )
-def update_spe_dfs(n_clicks: int, banco: str, spe: str, nome_cenario: str):
+def update_spe_dfs(banco: str, spe: str, nome_cenario: str):
+    if banco == 'Eólicas':
+        tipo: str = 'dre'
+        chave: str = 'dre'
+        conta_index: str = "Demonstração de Resultado"
+        cenario_nome: str = nome_cenario
+        tabela_dre = preparar_tabela_graph(collection_name=spe, banco=banco, tipo=tipo, chave=chave,
+                                           conta_index=conta_index, cenario_nome=cenario_nome)
 
-    if n_clicks == 0:
-        return no_update
+        tipo: str = 'bp'
+        chave: str = 'bp'
+        conta_index: str = "Balanço Patrimonial"
+        cenario_nome: str = nome_cenario
+        tabela_bp = preparar_tabela_graph(collection_name=spe, banco=banco, tipo=tipo, chave=chave,
+                                          conta_index=conta_index, cenario_nome=cenario_nome)
 
-    if n_clicks > 0:
+        tipo: str = 'fcd'
+        chave: str = 'fcd'
+        conta_index: str = "Fluxo de Caixa Direto"
+        cenario_nome: str = nome_cenario
+        tabela_fcd = preparar_tabela_graph(collection_name=spe, banco=banco, tipo=tipo, chave=chave,
+                                           conta_index=conta_index, cenario_nome=cenario_nome)
 
-        if banco == 'Eólicas':
-            tipo: str = 'dre'
-            chave: str = 'dre'
-            conta_index: str = "Demonstração de Resultado"
-            cenario_nome: str = nome_cenario
-            tabela_dre = preparar_tabela_graph(collection_name=spe, banco=banco, tipo=tipo, chave=chave,
-                                               conta_index=conta_index, cenario_nome=cenario_nome)
+        dash_dre_format = format_data_table(tabela_dre)
+        dash_bp_format = format_data_table(tabela_bp)
+        dash_fcd_format = format_data_table(tabela_fcd)
 
-            tipo: str = 'bp'
-            chave: str = 'bp'
-            conta_index: str = "Balanço Patrimonial"
-            cenario_nome: str = nome_cenario
-            tabela_bp = preparar_tabela_graph(collection_name=spe, banco=banco, tipo=tipo, chave=chave,
-                                              conta_index=conta_index, cenario_nome=cenario_nome)
+        div_retorno = html.Div(
+            children=[
+                html.H6(f"DRE Gerencial da SPE {spe} referente ao banco de dados {banco}."),
+                html.Hr(),
+                dash_dre_format,
+                html.Hr(),
+                html.H6(f"BP Gerencial da SPE {spe} referente ao banco de dados {banco}."),
+                html.Hr(),
+                dash_bp_format,
+                html.Hr(),
+                html.H6(f"FCD Gerencial da SPE {spe} referente ao banco de dados {banco}."),
+                html.Hr(),
+                dash_fcd_format
+            ]
+        )
 
-            tipo: str = 'fcd'
-            chave: str = 'fcd'
-            conta_index: str = "Fluxo de Caixa Direto"
-            cenario_nome: str = nome_cenario
-            tabela_fcd = preparar_tabela_graph(collection_name=spe, banco=banco, tipo=tipo, chave=chave,
-                                               conta_index=conta_index, cenario_nome=cenario_nome)
-
-            dash_dre_format = format_data_table(tabela_dre)
-            dash_bp_format = format_data_table(tabela_bp)
-            dash_fcd_format = format_data_table(tabela_fcd)
-
-            div_retorno = html.Div(
-                children=[
-                    html.H6(f"DRE Gerencial da SPE {spe} referente ao banco de dados {banco}."),
-                    html.Hr(),
-                    dash_dre_format,
-                    html.Hr(),
-                    html.H6(f"BP Gerencial da SPE {spe} referente ao banco de dados {banco}."),
-                    html.Hr(),
-                    dash_bp_format,
-                    html.Hr(),
-                    html.H6(f"FCD Gerencial da SPE {spe} referente ao banco de dados {banco}."),
-                    html.Hr(),
-                    dash_fcd_format
-                ]
-            )
-
-            return div_retorno
+        return div_retorno
 
     elif banco == 'Solar':
         msg: html.Div = html.Div(
@@ -306,66 +283,4 @@ def update_spe_dfs(n_clicks: int, banco: str, spe: str, nome_cenario: str):
         return html.Div(children=[html.H6(f"Mostrando dados da SPE {spe} referente ao banco de dados {banco}.")])
 
 
-
-
-# @callback(
-#     Output(component_id="id-home-section-page-dfs-0", component_property="children"),
-#     Output(component_id="id-home-btn-processar", component_property="disabled"),
-#     [Input(component_id="id-radio-items-bancos-home-page", component_property="value"),
-#      Input(component_id="id-dropdown-spe-home-page", component_property="value"),
-#      Input(component_id="id-dropdown-cenario-spe-home-page", component_property="value"),
-#      Input(component_id="id-home-btn-processar", component_property="n_clicks")],
-# )
-# def update_spe_dfs(banco: str, spe: str, nome_cenario: str, n_clicks: int):
-#     # Bloqueio inicial até que o botão seja clicado ao menos uma vez
-#     if n_clicks == 0 and not callback_context.triggered:
-#         return no_update, True
-#
-#     # Mostra estado de carregamento no botão e ativa o dcc.Loading
-#     if n_clicks > 0 or callback_context.triggered:
-#         if not banco or not spe or not nome_cenario:
-#             return html.Div("Por favor, selecione todas as opções."), False
-#
-#         # Processamento das tabelas
-#         tipo: str = 'dre'
-#         chave: str = 'dre'
-#         conta_index: str = "Demonstração de Resultado"
-#         tabela_dre = preparar_tabela_graph(collection_name=spe, banco=banco, tipo=tipo, chave=chave,
-#                                            conta_index=conta_index, cenario_nome=nome_cenario)
-#
-#         tipo: str = 'bp'
-#         chave: str = 'bp'
-#         conta_index: str = "Balanço Patrimonial"
-#         tabela_bp = preparar_tabela_graph(collection_name=spe, banco=banco, tipo=tipo, chave=chave,
-#                                           conta_index=conta_index, cenario_nome=nome_cenario)
-#
-#         tipo: str = 'fcd'
-#         chave: str = 'fcd'
-#         conta_index: str = "Fluxo de Caixa Direto"
-#         tabela_fcd = preparar_tabela_graph(collection_name=spe, banco=banco, tipo=tipo, chave=chave,
-#                                            conta_index=conta_index, cenario_nome=nome_cenario)
-#
-#         dash_dre_format = format_data_table(tabela_dre)
-#         dash_bp_format = format_data_table(tabela_bp)
-#         dash_fcd_format = format_data_table(tabela_fcd)
-#
-#         div_retorno = html.Div(
-#             children=[
-#                 html.H6(f"DRE Gerencial da SPE {spe} referente ao banco de dados {banco}."),
-#                 html.Hr(),
-#                 dash_dre_format,
-#                 html.Hr(),
-#                 html.H6(f"BP Gerencial da SPE {spe} referente ao banco de dados {banco}."),
-#                 html.Hr(),
-#                 dash_bp_format,
-#                 html.Hr(),
-#                 html.H6(f"FCD Gerencial da SPE {spe} referente ao banco de dados {banco}."),
-#                 html.Hr(),
-#                 dash_fcd_format
-#             ]
-#         )
-#
-#         return div_retorno, False
-#
-#     return no_update, False
 
