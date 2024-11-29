@@ -341,6 +341,7 @@ def get_info_file(banco, usina, cenario, sheetname, descricao, contents, n_click
                     unique_fields = {"empresa": usina, "nome": cenario, "tipo": sheetname}
                     # print(unique_fields)  # debug
                     crud.insert_document(document=documento, unique_fields=unique_fields)
+            cliente.close_connection()
 
             # TODO: Devemos apenas mostrar essa mensagem se o documento for salvo com sucesso. Para ele ser salvo,
             # não deve haver outro documento com os mesmos valores de 'empresa', 'nome' e 'tipo'.

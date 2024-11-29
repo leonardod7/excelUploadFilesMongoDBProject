@@ -1,19 +1,16 @@
 from dash import dcc, html, Input, Output, State, callback, ALL, no_update, callback_context, dash_table
 import dash_mantine_components as dmc
+from dash.exceptions import PreventUpdate
+
 from functions.funcoes import conectar_ao_banco
 from functions.funcoes_aux_table import preparar_tabela_graph
 from functions.funcao_table import format_data_table
 
 # 1) Dados iniciais das coleções ---------------------------------------------------------------------------------------
 # Usamos um nome base para cada coleção para que não tenhamos erro, pois precisamos passar um nome de coleção inicial
-collection_eolicas_base_name: str = "SPE Ventos da Serra"
+collection_eolicas_base_name: str = "SPE Moinhos de Vento"
 collection_solar_base_name: str = "Parque Solar 1"
 collection_hidro_base_name: str = "UHE 1"
-
-# TODO: Fazer callback para manter o estado das informações selecionadas pelo usuário na sua sessão.
-# TODO: Temos que pensar em como otimizar o consumo de dados no mongo db.
-# TODO: Temos que atualizar o estado quando inserimos uma informação e ela retorna "Arquivo Inserido com Sucesso",
-#  na página inserir documento.
 
 
 def home_page() -> html.Div:
@@ -21,6 +18,7 @@ def home_page() -> html.Div:
         id="id-home-page",
         className="home-section-page",
         children=[
+
             html.Div(className="home-section-page-0",
                      children=[
 
@@ -121,6 +119,17 @@ def home_page() -> html.Div:
                          ),
                      ]),
 
+            # Utilizado caso o debaixo não seja usado com o dcc.Loading
+            # html.Div(className="home-section-page-dfs-0",
+            #          id="id-home-section-page-dfs-0",
+            #          children=[
+            #              # TODO: DRE, BP e FCD.
+            #
+            #          ]),
+
+            # # Div para testar se os dados foram armazenados no dcc.Store id-store-banco-spe-selecionado
+            # html.Div(id='id-teste-store-banco-spe-selecionado', children=[]),
+
             dcc.Loading(
                 id="loading",
                 type="circle",  # Tipos disponíveis: "default", "circle", "dot"
@@ -133,20 +142,20 @@ def home_page() -> html.Div:
                              ]),
                 ],
             ),
+
         ])
 
     return page
 
 
-# Callbacks ------------------------------------------------------------------------------------------------------------
-
-# 1) Callback para alterar o nome das SPEs no dropdown conforme banco de dados selecionado
+# 0) Callback para atualizar os dados do dropdown das SPEs  ------------------------------------------------------------
 @callback(
     Output(component_id="id-dropdown-spe-home-page", component_property="data"),
     Output(component_id="id-dropdown-spe-home-page", component_property="value"),
     Input(component_id="id-radio-items-bancos-home-page", component_property="value")
 )
 def update_spe_dropdown(banco: str):
+
     if banco == 'Eólicas':
         cliente, eolicas_crud = conectar_ao_banco(collection_name=collection_eolicas_base_name,
                                                   database_name=banco)
@@ -162,6 +171,18 @@ def update_spe_dropdown(banco: str):
         else:
             valor_default = colecoes[0]
             lista_valores = [{"label": spe, "value": spe} for spe in colecoes]
+
+        # print(lista_valores)
+        # print(valor_default)
+        #
+        # # Criar uma lista para armazenar os valores da chave 'value'
+        # lista_nome_colecoes = []
+        #
+        # # Iterar sobre os dados e pegar os valores da chave 'value'
+        # for item in lista_valores:
+        #     lista_nome_colecoes.append(item['value'])
+        #
+        # print(lista_nome_colecoes)
 
         return lista_valores, valor_default
 
@@ -181,6 +202,19 @@ def update_spe_dropdown(banco: str):
             valor_default = colecoes[0]
             lista_valores = [{"label": spe, "value": spe} for spe in colecoes]
 
+        # print(lista_valores)
+        # print(valor_default)
+        #
+        # # Criar uma lista para armazenar os nomes das coleções que serão salvas no dcc.Store
+        # lista_nome_colecoes = []
+        #
+        # # Iterar sobre os dados e pegar os valores da chave 'value'
+        # for item in lista_valores:
+        #     lista_nome_colecoes.append(item['value'])
+        #
+        # # Lista que será salva com o nome das coleções
+        # print(lista_nome_colecoes)
+
         return lista_valores, valor_default
 
     elif banco == 'Hidrelétricas':
@@ -199,36 +233,76 @@ def update_spe_dropdown(banco: str):
             valor_default = colecoes[0]
             lista_valores = [{"label": spe, "value": spe} for spe in colecoes]
 
+        # print(lista_valores)
+        # print(valor_default)
+        #
+        # # Criar uma lista para armazenar os valores da chave 'value'
+        # lista_nome_colecoes = []
+        #
+        # # Iterar sobre os dados e pegar os valores da chave 'value'
+        # for item in lista_valores:
+        #     lista_nome_colecoes.append(item['value'])
+        #
+        # print(lista_nome_colecoes)
+
         return lista_valores, valor_default
 
 
-# 2) Callback para alterar o nome dos cenários no dropdown conforme SPE escolhida
+# 1) Callback para atualizar o dcc.Store com o banco e a SPE escolhida
 @callback(
-    Output(component_id="id-dropdown-cenario-spe-home-page", component_property="data"),
-    Output(component_id="id-dropdown-cenario-spe-home-page", component_property="value"),
-    Input(component_id="id-dropdown-spe-home-page", component_property="value")
+    Output(component_id='id-store-banco-spe-selecionado', component_property='data'),
+    Input(component_id='id-radio-items-bancos-home-page', component_property='value'),
+    Input(component_id='id-dropdown-spe-home-page', component_property='value')
 )
-def update_cenario_dropdown(spe: str):
-    cliente, crud = conectar_ao_banco(collection_name=spe, database_name='Eólicas')
-    try:
-        documentos = crud.list_documents()
-        # Vamos listar todos os nomes dos cenários. Ele retorna uma lista com nomes de todos os documentos
-        cenarios = [doc['nome'] for doc in documentos]
-        # Precisamos pegar os nomes únicos, pois podemos ter cenários repetidos
-        cenarios = list(set(cenarios))
-        print(cenarios)  # debug
-    finally:
-        cliente.close_connection()
+def update_store_with_banco_and_spe(banco, spe):
+    if banco and spe:
+        # Retorna uma lista com o banco e a SPE
+        return [banco, spe]
+    raise PreventUpdate
 
-    # Temos que verificar se a lista é vazia, pois podemos ter deletado todas as coleções
-    if len(cenarios) == 0:
-        valor_default = 'Sem cenários.'
-        lista_valores = ['Sem cenários.']
-    else:
-        valor_default = cenarios[0]
-        lista_valores = [{"label": cenario, "value": cenario} for cenario in cenarios]
 
-    return lista_valores, valor_default
+# 2) Callback para atualizar o dropdown de cenários conforme a SPE escolhida ------------------------------------------
+# Agora, criamos o callback para atualizar o dropdown de Cenário com base nos dados armazenados no dcc.Store.
+# Esse callback vai ser disparado sempre que os valores do dcc.Store forem alterados:
+# 2) Callback para atualizar os cenários com base no banco e na SPE armazenados
+@callback(
+    Output(component_id='id-dropdown-cenario-spe-home-page', component_property='data'),
+    Output(component_id='id-dropdown-cenario-spe-home-page', component_property='value'),
+    Input(component_id='id-store-banco-spe-selecionado', component_property='data')
+)
+def update_cenario_dropdown(store_data):
+
+    if store_data:
+        banco = store_data[0]
+        spe = store_data[1]
+        # print(store_data)  # debug
+        cliente, crud = conectar_ao_banco(collection_name=spe, database_name=banco)
+        # print(cliente)  # debug
+        try:
+            documentos = crud.list_documents()
+            # print(documentos)  # debug
+            # Vamos listar todos os nomes dos cenários. Ele retorna uma lista com nomes de todos os documentos
+            cenarios = [doc['nome'] for doc in documentos]
+            # Precisamos pegar os nomes únicos, pois podemos ter cenários repetidos
+            cenarios = list(set(cenarios))
+            # print(cenarios)  # debug
+            default_value = cenarios[0]
+        except Exception as e:
+            # print(e)  # debug
+            cenarios = ['Sem cenários.']
+            default_value = 'Sem cenários.'
+        finally:
+            cliente.close_connection()
+
+        return cenarios, default_value
+
+
+
+
+
+
+
+
 
 
 # # 3) Callback para apresentar os dados de cada SPE conforme escolha do banco de dados.
@@ -290,22 +364,93 @@ def update_spe_dfs(n_clicks: int, banco: str, spe: str, nome_cenario: str):
 
             return div_retorno
 
-    elif banco == 'Solar':
-        msg: html.Div = html.Div(
-            children=[html.H6(f"Mostrando dados da SPE {spe} referente ao banco de dados {banco}.")])
+        elif banco == 'Solar':
+            tipo: str = 'dre'
+            chave: str = 'dre'
+            conta_index: str = "Demonstração de Resultado"
+            cenario_nome: str = nome_cenario
+            tabela_dre = preparar_tabela_graph(collection_name=spe, banco=banco, tipo=tipo, chave=chave,
+                                               conta_index=conta_index, cenario_nome=cenario_nome)
 
-        return msg
+            tipo: str = 'bp'
+            chave: str = 'bp'
+            conta_index: str = "Balanço Patrimonial"
+            cenario_nome: str = nome_cenario
+            tabela_bp = preparar_tabela_graph(collection_name=spe, banco=banco, tipo=tipo, chave=chave,
+                                              conta_index=conta_index, cenario_nome=cenario_nome)
 
-    elif banco == 'Hidrelétricas':
-        msg: html.Div = html.Div(
-            children=[html.H6(f"Mostrando dados da SPE {spe} referente ao banco de dados {banco}.")])
+            tipo: str = 'fcd'
+            chave: str = 'fcd'
+            conta_index: str = "Fluxo de Caixa Direto"
+            cenario_nome: str = nome_cenario
+            tabela_fcd = preparar_tabela_graph(collection_name=spe, banco=banco, tipo=tipo, chave=chave,
+                                               conta_index=conta_index, cenario_nome=cenario_nome)
 
-        return msg
+            dash_dre_format = format_data_table(tabela_dre)
+            dash_bp_format = format_data_table(tabela_bp)
+            dash_fcd_format = format_data_table(tabela_fcd)
 
-    else:
-        return html.Div(children=[html.H6(f"Mostrando dados da SPE {spe} referente ao banco de dados {banco}.")])
+            div_retorno = html.Div(
+                children=[
+                    html.H6(f"DRE Gerencial da SPE {spe} referente ao banco de dados {banco}."),
+                    html.Hr(),
+                    dash_dre_format,
+                    html.Hr(),
+                    html.H6(f"BP Gerencial da SPE {spe} referente ao banco de dados {banco}."),
+                    html.Hr(),
+                    dash_bp_format,
+                    html.Hr(),
+                    html.H6(f"FCD Gerencial da SPE {spe} referente ao banco de dados {banco}."),
+                    html.Hr(),
+                    dash_fcd_format
+                ]
+            )
 
+            return div_retorno
 
+        elif banco == 'Hidrelétricas':
+            tipo: str = 'dre'
+            chave: str = 'dre'
+            conta_index: str = "Demonstração de Resultado"
+            cenario_nome: str = nome_cenario
+            tabela_dre = preparar_tabela_graph(collection_name=spe, banco=banco, tipo=tipo, chave=chave,
+                                               conta_index=conta_index, cenario_nome=cenario_nome)
+
+            tipo: str = 'bp'
+            chave: str = 'bp'
+            conta_index: str = "Balanço Patrimonial"
+            cenario_nome: str = nome_cenario
+            tabela_bp = preparar_tabela_graph(collection_name=spe, banco=banco, tipo=tipo, chave=chave,
+                                              conta_index=conta_index, cenario_nome=cenario_nome)
+
+            tipo: str = 'fcd'
+            chave: str = 'fcd'
+            conta_index: str = "Fluxo de Caixa Direto"
+            cenario_nome: str = nome_cenario
+            tabela_fcd = preparar_tabela_graph(collection_name=spe, banco=banco, tipo=tipo, chave=chave,
+                                               conta_index=conta_index, cenario_nome=cenario_nome)
+
+            dash_dre_format = format_data_table(tabela_dre)
+            dash_bp_format = format_data_table(tabela_bp)
+            dash_fcd_format = format_data_table(tabela_fcd)
+
+            div_retorno = html.Div(
+                children=[
+                    html.H6(f"DRE Gerencial da SPE {spe} referente ao banco de dados {banco}."),
+                    html.Hr(),
+                    dash_dre_format,
+                    html.Hr(),
+                    html.H6(f"BP Gerencial da SPE {spe} referente ao banco de dados {banco}."),
+                    html.Hr(),
+                    dash_bp_format,
+                    html.Hr(),
+                    html.H6(f"FCD Gerencial da SPE {spe} referente ao banco de dados {banco}."),
+                    html.Hr(),
+                    dash_fcd_format
+                ]
+            )
+
+            return div_retorno
 
 
 # @callback(
@@ -369,3 +514,18 @@ def update_spe_dfs(n_clicks: int, banco: str, spe: str, nome_cenario: str):
 #
 #     return no_update, False
 
+
+
+# Callback de teste para check dos dados armazenados ------------------------------------------------------------------
+# @callback(
+#     Output(component_id="id-teste-store-banco-spe-selecionado", component_property="children"),
+#     Input(component_id="id-store-banco-spe-selecionado", component_property="data"),
+# )
+# def verificar_dados_store(store_data):
+#     return f"Dados no Store: {store_data}"
+
+
+# TODO: Fazer callback para manter o estado das informações selecionadas pelo usuário na sua sessão.
+# TODO: Temos que pensar em como otimizar o consumo de dados no mongo db.
+# TODO: Temos que atualizar o estado quando inserimos uma informação e ela retorna "Arquivo Inserido com Sucesso",
+#  na página inserir documento.

@@ -50,7 +50,7 @@ A importação dos dados é realizada por meio de uma funcionalidade de *drag an
 - CSS
 - Dash Plotly
 
-#### <font color=gray>3.2) Requisitos Funcionais:</font>
+#### <font color=gray>2.2) Requisitos Funcionais:</font>
 
 - O usuário poderá enviar arquivos em formato Excel, através da funcionalidade **Drag and Drop**.
 - A aplicação deverá realizar a leitura dos arquivos e armazenar os dados no banco de dados.
@@ -59,7 +59,7 @@ A importação dos dados é realizada por meio de uma funcionalidade de *drag an
 - A aplicação deverá apresentar opções de consulta e cadastro de arquivos para 3 modalidades de usinas: Eólicas, Solar e Hidrelétricas.
 - A aplicação deverá permitir a exclusão de arquivos.
 
-#### <font color=gray>4) Requisitos Não Funcionais:</font>
+#### <font color=gray>2.3) Requisitos Não Funcionais:</font>
 
 - A aplicação deverá ser responsiva.
 - A aplicação deverá utilizar o banco de dados MongoDB Atlas.

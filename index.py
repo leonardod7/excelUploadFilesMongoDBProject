@@ -23,10 +23,14 @@ app.layout = dmc.MantineProvider(
 
                  # Armazenando os cenários
                  dcc.Store(id="id-cenarios-store"),
+
                  # Armazenando os cenários com o nome da colecao e do banco
                  dcc.Store(id="id-collection-db_names-store"),
 
-                 dcc.Store(id='id-store-infotabela-usuario', storage_type='session'),  # Armazenamento de sessão
+                 # Adicionando o dcc.Store na estrutura HTML para armazenar os dados
+                 dcc.Store(id='id-store-banco-spe-selecionado', storage_type='memory'),
+
+
 
                  # Container de páginas
                  dcc.Location(id='url', refresh=False),
