@@ -1,11 +1,11 @@
 import dash_bootstrap_components as dbc
 from dash import html
 
-def navbar():
+def navbar() -> dbc.NavbarSimple:
     # Definir o caminho da imagem
     image_path = "assets/img/database.png"  # Substitua pelo caminho da sua imagem
 
-    navbar = dbc.NavbarSimple(
+    navbar: dbc.NavbarSimple = dbc.NavbarSimple(
         children=[
             dbc.NavItem(dbc.NavLink(children="Home", href="/home")),
             dbc.NavItem(dbc.NavLink(children="Consultar Documentos", href="/consultar-documentos")),

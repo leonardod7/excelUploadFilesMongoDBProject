@@ -7,7 +7,7 @@ def format_data_table(dataframe):
         dataframe[col] = dataframe[col].apply(lambda x: f"{x:,.2f}".replace(',', 'X').replace('.', ',').replace('X', '.'))
 
     # Configurações de estilo para o DataTable
-    return dash_table.DataTable(
+    tabela: dash_table.DataTable = dash_table.DataTable(
         data=dataframe.to_dict('records'),
         columns=[{'name': i, 'id': i} for i in dataframe.columns],
         page_size=5,
@@ -48,3 +48,5 @@ def format_data_table(dataframe):
         page_action='none',  # Desativa a paginação
         fixed_rows={'headers': True},  # Cabeçalho fixo
     )
+
+    return tabela

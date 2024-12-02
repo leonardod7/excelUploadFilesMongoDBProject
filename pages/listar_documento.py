@@ -30,17 +30,14 @@ def consultar_documentos_page() -> html.Div:
                         id='id-radio-items-bancos',
                         className="custom-radio-items",
                         options=[
-                            {'label': html.Span(children=[
-                                html.Img(src='/assets/img/db_cinza.png',
-                                         style={'width': '20px', 'height': '20px', 'marginRight': '10px'}),
-                                "Eólicas"
-                            ], style={
-                                'fontWeight': 'bold',
-                                'fontFamily': 'Arial Narrow',
-                                'fontSize': '14px',
-                            }),
-                                'value': 'Eólicas'
-                            },
+                            {'label': html.Span(children=[html.Img(src='/assets/img/db_cinza.png',
+                                                                   style={'width': '20px',
+                                                                          'height': '20px',
+                                                                          'marginRight': '10px'}),
+                                                          "Biomassa"], style={'fontWeight': 'bold',
+                                                                              'fontFamily': 'Arial Narrow',
+                                                                              'fontSize': '14px',}),
+                                'value': 'Biomassa'},
                             {'label': html.Span(children=[
                                 html.Img(src='/assets/img/db_cinza.png',
                                          style={'width': '20px', 'height': '20px', 'marginRight': '10px'}),
@@ -63,7 +60,7 @@ def consultar_documentos_page() -> html.Div:
                             }),
                                 'value': 'Hidrelétricas'
                             }
-                        ], value='Eólicas'),
+                        ], value='Biomassa'),
                 ]),
             # Div - 2 -------------------------------------------------------------------------------------------
             html.Div(
@@ -149,10 +146,10 @@ def upload_data_from_mongo_to_store(db_name, colecoes_div, collection):
 )
 def listar_colecoes_radio_items(value):
 
-    if value == 'Eólicas':
+    if value == 'Biomassa':
 
         # Nome da coleção no cache
-        colecao_name: str = 'eolicas_colecoes'
+        # colecao_name: str = 'eolicas_colecoes'
         colecoes = ""
 
         # Se não estiverem no cache, acessa o banco de dados
@@ -189,7 +186,7 @@ def listar_colecoes_radio_items(value):
     elif value == 'Solar':
 
         # Nome da coleção no cache
-        colecao_name: str = 'solar_colecoes'
+        # colecao_name: str = 'solar_colecoes'
         colecoes = ""
 
         if not colecoes:
@@ -225,7 +222,7 @@ def listar_colecoes_radio_items(value):
     elif value == 'Hidrelétricas':
 
         # Nome da coleção no cache
-        colecao_name: str = 'hidro_colecoes'
+        # colecao_name: str = 'hidro_colecoes'
         colecoes = ""
 
         if not colecoes:
@@ -369,8 +366,6 @@ def deletar_documento(n_clicks, list_banco_collection, data):
 
         # 3.2.8) Converte dicionário em JSON para ser devolvido ao dcc.Store
         json_cenarios = json.dumps(data_final_copy, default=str)  # Dados que serão armazenados no dcc.Store
-
-
 
         return json_cenarios
 

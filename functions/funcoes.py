@@ -8,7 +8,7 @@ import base64
 import io
 
 from dao.MongoCRUD import MongoDBCRUD
-from model.MongoConnection import MongoEolicasConnection, MongoSolarConnection, MongoHidroConnection
+from model.MongoConnection import MongoBiomassaConnection, MongoSolarConnection, MongoHidroConnection
 
 
 # 1) Função para criar as partes do documento --------------------------------------------------------------------------
@@ -301,11 +301,11 @@ def parse_contents(contents: str, sheetname: str | None = None) -> pd.DataFrame:
 
 
 def conectar_ao_banco(collection_name: str, database_name: str):
-    if database_name == 'Eólicas':
-        cliente = MongoEolicasConnection()
+    if database_name == 'Biomassa':
+        cliente = MongoBiomassaConnection()
         cliente.connect_to_db()
-        eolicas_crud = MongoDBCRUD(db_connection=cliente, collection_name=collection_name)
-        return cliente, eolicas_crud
+        biomassa_crud = MongoDBCRUD(db_connection=cliente, collection_name=collection_name)
+        return cliente, biomassa_crud
     elif database_name == 'Solar':
         cliente = MongoSolarConnection()
         cliente.connect_to_db()

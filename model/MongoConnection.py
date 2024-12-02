@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-class MongoEolicasConnection:
+class MongoBiomassaConnection:
     def __init__(self) -> None:
         self.__connection_string = (
             'mongodb+srv://{}:{}@{}/{}?retryWrites=true&w=majority&appName={}'
@@ -25,9 +25,9 @@ class MongoEolicasConnection:
         try:
             self.__client = MongoClient(self.__connection_string)
             self.__db_connection = self.__client[self.__database_name]
-            print("Conexão bem-sucedida ao MongoDB Eólicas!")
+            print("Conexão bem-sucedida ao MongoDB Biomassa!")
         except ConnectionError as e:
-            print("Erro ao conectar ao MongoDB Eólicas:", e)
+            print("Erro ao conectar ao MongoDB Biomassa:", e)
 
     def get_db_connection(self):
         return self.__db_connection
@@ -38,7 +38,7 @@ class MongoEolicasConnection:
     def close_connection(self):
         if self.__client is not None:
             self.__client.close()  # Fecha a conexão com o MongoDB
-            print("Conexão com o MongoDB, Banco de Dados Eólicas fechada.")
+            print("Conexão com o MongoDB, Banco de Dados Biomassa fechada.")
 
 class MongoSolarConnection:
     def __init__(self) -> None:
@@ -112,8 +112,8 @@ class MongoHidroConnection:
 # Testando a Conexão com o MongoDB Atlas -------------------------------------------------------------------------------
 if __name__ == '__main__':
 
-    # Conexão com o banco de dados Eólicas
-    connection_eolicas = MongoEolicasConnection()
+    # Conexão com o banco de dados Biomassa
+    connection_eolicas = MongoBiomassaConnection()
     connection_eolicas.connect_to_db()
     connection_eolicas.close_connection()
 

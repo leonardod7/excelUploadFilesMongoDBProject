@@ -32,10 +32,8 @@ Os arquivos deverão seguir um padrão de formatação e a aplicação deverá r
 - O usuário poderá enviar arquivos em formato Excel, através da funcionalidade **Drag and Drop**.
 - A aplicação deverá realizar a leitura dos arquivos e armazenar os dados no banco de dados.
 - A aplicação deverá exibir os dados na tela quando solicitado.
-- A aplicação deverá exibir a quantidade de documentos armazenados.
-- A aplicação deverá apresentar opções de consulta e cadastro de arquivos para 3 modalidades de usinas: Eólicas, Solar e Hidrelétricas.
+- A aplicação deverá apresentar opções de consulta e cadastro de arquivos para 3 modalidades de usinas: Biomassa, Solar e Hidrelétricas.
 - A aplicação deverá permitir a exclusão de arquivos.
-- A aplicação não deverá permitir a exclusão de arquivo quando restar apenas 1 único arquivo. Ela deverá exibir uma mensagem de erro.
 
 #### <font color=gray>4) Requisitos Não Funcionais:</font>
 
@@ -48,8 +46,6 @@ Os arquivos deverão seguir um padrão de formatação e a aplicação deverá r
 - A aplicação poderá ser desenvolvida utilizando o padrão de arquitetura MVC (Model-View-Controller).
 
 Estamos utilizando esse conceito no projeto, onde o DAO lida com o acesso ao banco de dados, as classes como SPE representam o modelo de negócio e o Dash atua como uma camada de visualização (View)
-
-
 
 
 
@@ -71,32 +67,6 @@ O projeto possui a seguinte divisão de pastas:
 - > **index** - Arquivo principal responsável por iniciar a aplicação.
 - > **requirements** - Arquivo com as dependências do projeto.
 
-### <font color=#ffcc00>1.2) Configuração Mongo DB </font>
-  
-
-
-## <font color=#ffcc00> 2) Arquivos.py:</font>
-
-### <font color=#ffcc00>2.1) app.py </font>
-
-
-```python
-# Importando as bibliotecas 
-import dash
-import dash_bootstrap_components as dbc
-from flask_caching import Cache  # pip install Flask-Caching
-
-app = dash.Dash(__name__, external_stylesheets=[dbc.themes.SANDSTONE])
-server = app.server
-app.config.suppress_callback_exceptions = True
-
-
-# Configuração do cache
-cache = Cache(app.server, config={
-    'CACHE_TYPE': 'simple',  # Pode mudar para 'redis', 'filesystem', etc. conforme necessidade
-    'CACHE_DEFAULT_TIMEOUT': 300  # Cache expira em 5 minutos (300 segundos)
-})
-```
 
 
 Este arquivo configura o aplicativo Dash e define as principais configurações, incluindo o cache e os temas para os estilos visuais.
@@ -136,14 +106,97 @@ Uso do Cache:
   não mudam com frequência.
 - Para utilizar o cache em um callback, basta aplicar o decorador `@cache.memoize(timeout=N)`, onde `N` é o tempo de cache em segundos.
 
+#### Nota: Importante ressaltar que inicialmente no desenvolvimento do app, o Cache estava sendo utilizado para armazenar o nome dos bancos. Porém, optamos por não utilizar no app final.
+
+### <font color=#ffcc00>1.2) Pasta assets</font>
+
+A pasta assets contém os arquivos de imagem e formatação css utilizados na aplicação. Temos os seguintes arquivos:
+
+- > **consult_page** - arquivo de formatação css da página listar_documentos.py.
+- > **insert_page** - arquivo de formatação css da página inserir_documentos.py.
+- > **cores** - arquivo de formatação css padrão para todo o projeto. Ele trás as paletas de cores utilizadas no projeto.
+- > **home** - arquivo de formatação css da página home.py.
+- > **img** - pasta com as imagens utilizadas no projeto.
+
+
+### <font color=#ffcc00>1.3) Pasta components</font>
+
+A pasta components contém os arquivos de componentes utilizados na aplicação. Temos os seguintes arquivos:
+
+- > **navbar.py** - componente de barra de navegação.
+
+Esse é o único componente utilizado no projeto, ele é responsável por criar a barra de navegação que é utilizada em todas as páginas do projeto.
+
+```python
+import dash_bootstrap_components as dbc
+from dash import html
+
+def navbar() -> dbc.NavbarSimple:
+    # Definir o caminho da imagem
+    image_path = "assets/img/database.png"  # Substitua pelo caminho da sua imagem
+
+    navbar: dbc.NavbarSimple = dbc.NavbarSimple(
+        children=[
+            dbc.NavItem(dbc.NavLink(children="Home", href="/home")),
+            dbc.NavItem(dbc.NavLink(children="Consultar Documentos", href="/consultar-documentos")),
+            dbc.NavItem(dbc.NavLink(children="Inserir Documento", href="/inserir-documento")),
+        ],
+        # Usar dbc.Row para organizar a imagem e o nome da marca lado a lado
+        brand=dbc.Row(
+            children=[
+                dbc.Col(html.Img(src=image_path, height="40px")),  # Defina a altura da imagem
+                dbc.Col(dbc.NavbarBrand(children="Mongo DB DataBase Management", className="ms-2",
+                                        style={"fontSize": "16px", "fontWeight": "bold", "color": "white"})),
+            ],
+            align="center",  # Centraliza verticalmente
+            className="g-0",  # Remove o espaçamento entre as colunas
+        ),
+        brand_href="#",
+        color="dark",
+        dark=True,
+        className="mb-4",
+        id="id-navbar",
+        style={"marginTop": "20px"}  # Adiciona margens
+    )
+
+    return navbar
+
+```
+
+Veja que o app possui um componente de barra de navegação que é utilizado em todas as páginas do projeto. O componente é responsável por criar a barra de navegação que contém os links para as páginas Home, Consultar Documentos e Inserir Documento.
 
 
 
 
 
+---
+
+### <font color=#ffcc00>1.2) Configuração Mongo DB </font>
 
 
 
+## <font color=#ffcc00> 2) Arquivos.py:</font>
+
+### <font color=#ffcc00>2.1) app.py </font>
+
+
+```python
+# Importando as bibliotecas 
+import dash
+import dash_bootstrap_components as dbc
+from flask_caching import Cache  # pip install Flask-Caching
+
+app = dash.Dash(__name__, external_stylesheets=[dbc.themes.SANDSTONE])
+server = app.server
+app.config.suppress_callback_exceptions = True
+
+
+# Configuração do cache
+cache = Cache(app.server, config={
+    'CACHE_TYPE': 'simple',  # Pode mudar para 'redis', 'filesystem', etc. conforme necessidade
+    'CACHE_DEFAULT_TIMEOUT': 300  # Cache expira em 5 minutos (300 segundos)
+})
+```
 
 
 

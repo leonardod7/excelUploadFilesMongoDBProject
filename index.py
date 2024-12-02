@@ -2,9 +2,9 @@
 from dash import html, Input, Output, State, dash, dcc, page_registry, _dash_renderer
 import dash_mantine_components as dmc
 
+from pages.home import home_page
 from pages.inserir_documentos import inserir_documentos_page
 from pages.listar_documento import consultar_documentos_page
-from pages.home import home_page
 
 _dash_renderer._set_react_version("18.2.0")
 
@@ -27,10 +27,8 @@ app.layout = dmc.MantineProvider(
                  # Armazenando os cenários com o nome da colecao e do banco
                  dcc.Store(id="id-collection-db_names-store"),
 
-                 # Adicionando o dcc.Store na estrutura HTML para armazenar os dados
+                 # # Adicionando o dcc.Store na estrutura HTML para armazenar os dados
                  dcc.Store(id='id-store-banco-spe-selecionado', storage_type='memory'),
-
-
 
                  # Container de páginas
                  dcc.Location(id='url', refresh=False),
@@ -57,7 +55,7 @@ def display_page(pathname):
     elif pathname == '/home':
         return home_page()
     else:
-        return consultar_documentos_page()  # Página padrão é o upload de documentos
+        return home_page()  # Página padrão é a home
 
 
 # Rodando o app -------------------------------------------------------------------------------------------------------

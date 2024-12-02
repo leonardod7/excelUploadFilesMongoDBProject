@@ -1,4 +1,4 @@
-from model.MongoConnection import MongoEolicasConnection
+from model.MongoConnection import *
 from pymongo.errors import DuplicateKeyError
 from dash import html
 
@@ -9,7 +9,8 @@ class MongoDBCRUD:
     Classe que contém as operações CRUD para o MongoDB.
     """
 
-    def __init__(self, db_connection: MongoEolicasConnection, collection_name: str | None) -> None:
+    def __init__(self, db_connection: MongoBiomassaConnection | MongoSolarConnection | MongoHidroConnection,
+                 collection_name: str | None) -> None:
         self.__collection_name = collection_name
         self.__db_connection = db_connection
 
@@ -158,11 +159,11 @@ class MongoDBCRUD:
 # Testando a conexão como o Mongo DB Atlas -----------------------------------------------------------------------------
 if __name__ == '__main__':
 
-    cliente = MongoEolicasConnection()
+    cliente = MongoSolarConnection()
     cliente.connect_to_db()
     db_connection = cliente.get_db_connection()
 
-    collection_name: str = "SPE Carazinho"
+    collection_name: str = "SPE Moinhos de Vento"
     eolicas_crud = MongoDBCRUD(db_connection=cliente, collection_name=collection_name)
 
     print("Coleções no banco de dados:")

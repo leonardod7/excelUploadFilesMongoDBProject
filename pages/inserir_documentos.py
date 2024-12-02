@@ -30,13 +30,13 @@ def inserir_documentos_page():
                                                               html.Img(src='/assets/img/db_cinza.png',
                                                                        style={'width': '20px', 'height': '20px',
                                                                               'marginRight': '10px'}),
-                                                              "Eólicas"
+                                                              "Biomassa"
                                                           ], style={
                                                               'fontWeight': 'bold',
                                                               'fontFamily': 'Arial Narrow',
                                                               'fontSize': '14px',
                                                           }),
-                                                              'value': 'Eólicas'
+                                                              'value': 'Biomassa'
                                                           },
                                                           {'label': html.Span(children=[
                                                               html.Img(src='/assets/img/db_cinza.png',
@@ -62,7 +62,7 @@ def inserir_documentos_page():
                                                           }),
                                                               'value': 'Hidrelétricas'
                                                           }
-                                                      ], value='Eólicas'),
+                                                      ], value='Biomassa'),
                                               ]),
 
                                           # 1.2) Div - Insira o nome da usina (coleção)
@@ -305,7 +305,7 @@ def get_info_file(banco, usina, cenario, sheetname, descricao, contents, n_click
             # Até o print de cima, ambos estão iguais, o df usando na inserção manual e aqui
 
             # 3.2.1) Instanciando a classe de conexão com o banco de dados
-            cliente = MongoSolarConnection() if banco == 'Solar' else MongoEolicasConnection() if banco == 'Eólicas' \
+            cliente = MongoSolarConnection() if banco == 'Solar' else MongoBiomassaConnection() if banco == 'Biomassa' \
                 else MongoHidroConnection()
 
             cliente.connect_to_db()
@@ -313,7 +313,7 @@ def get_info_file(banco, usina, cenario, sheetname, descricao, contents, n_click
             # 3.2.3) Criar as partes do documento    criar_partes_documento_from_drag_and_drop
             documentos: list[dict] = criar_partes_documento2(
                 df=df,
-                setor='hidro' if banco == 'Hidrelétricas' else 'eolicas' if banco == 'Eólicas' else 'solar',
+                setor='hidro' if banco == 'Hidrelétricas' else 'biomassa' if banco == 'Biomassa' else 'solar',
                 empresa_nome=usina,
                 cenario_nome=cenario,
                 descricao_cenario=descricao,

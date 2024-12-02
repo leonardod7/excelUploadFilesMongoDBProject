@@ -8,7 +8,7 @@ from functions.funcao_table import format_data_table
 
 # 1) Dados iniciais das coleções ---------------------------------------------------------------------------------------
 # Usamos um nome base para cada coleção para que não tenhamos erro, pois precisamos passar um nome de coleção inicial
-collection_eolicas_base_name: str = "SPE Moinhos de Vento"
+collection_biomassa_base_name: str = "Vale do Paraná Albioma"
 collection_solar_base_name: str = "Parque Solar 1"
 collection_hidro_base_name: str = "UHE 1"
 
@@ -35,13 +35,13 @@ def home_page() -> html.Div:
                                          {'label': html.Span(children=[
                                              html.Img(src='/assets/img/db_cinza.png',
                                                       style={'width': '20px', 'height': '20px', 'marginRight': '10px'}),
-                                             "Eólicas"
+                                             "Biomassa"
                                          ], style={
                                              'fontWeight': 'bold',
                                              'fontFamily': 'Arial Narrow',
                                              'fontSize': '14px',
                                          }),
-                                             'value': 'Eólicas'
+                                             'value': 'Biomassa'
                                          },
                                          {'label': html.Span(children=[
                                              html.Img(src='/assets/img/db_cinza.png',
@@ -65,7 +65,7 @@ def home_page() -> html.Div:
                                          }),
                                              'value': 'Hidrelétricas'
                                          }
-                                     ], value='Eólicas'),
+                                     ], value='Biomassa'),
                              ]),
 
                          # Div - 2 SPE Escolha -------------------------------------------------------------------------
@@ -111,7 +111,7 @@ def home_page() -> html.Div:
             html.Div(className="home-section-page-4",
                      children=[
                          html.Button(
-                             className='btn-submit-doc',
+                             className='atualizar-btn',
                              id='id-home-btn-processar',
                              children=['Atualizar'],
                              n_clicks=0,
@@ -119,13 +119,6 @@ def home_page() -> html.Div:
                          ),
                      ]),
 
-            # Utilizado caso o debaixo não seja usado com o dcc.Loading
-            # html.Div(className="home-section-page-dfs-0",
-            #          id="id-home-section-page-dfs-0",
-            #          children=[
-            #              # TODO: DRE, BP e FCD.
-            #
-            #          ]),
 
             # # Div para testar se os dados foram armazenados no dcc.Store id-store-banco-spe-selecionado
             # html.Div(id='id-teste-store-banco-spe-selecionado', children=[]),
@@ -136,10 +129,7 @@ def home_page() -> html.Div:
                 children=[
                     html.Div(className="home-section-page-dfs-0",
                              id="id-home-section-page-dfs-0",
-                             children=[
-                                 # TODO: DRE, BP e FCD.
-
-                             ]),
+                             children=[]),
                 ],
             ),
 
@@ -155,12 +145,11 @@ def home_page() -> html.Div:
     Input(component_id="id-radio-items-bancos-home-page", component_property="value")
 )
 def update_spe_dropdown(banco: str):
-
-    if banco == 'Eólicas':
-        cliente, eolicas_crud = conectar_ao_banco(collection_name=collection_eolicas_base_name,
-                                                  database_name=banco)
+    if banco == 'Biomassa':
+        cliente, biomassa_crud = conectar_ao_banco(collection_name=collection_biomassa_base_name,
+                                                   database_name=banco)
         try:
-            colecoes = eolicas_crud.list_collections()
+            colecoes = biomassa_crud.list_collections()
         finally:
             cliente.close_connection()
 
@@ -271,7 +260,6 @@ def update_store_with_banco_and_spe(banco, spe):
     Input(component_id='id-store-banco-spe-selecionado', component_property='data')
 )
 def update_cenario_dropdown(store_data):
-
     if store_data:
         banco = store_data[0]
         spe = store_data[1]
@@ -297,14 +285,6 @@ def update_cenario_dropdown(store_data):
         return cenarios, default_value
 
 
-
-
-
-
-
-
-
-
 # # 3) Callback para apresentar os dados de cada SPE conforme escolha do banco de dados.
 @callback(
     Output(component_id="id-home-section-page-dfs-0", component_property="children"),
@@ -314,13 +294,12 @@ def update_cenario_dropdown(store_data):
      State(component_id="id-dropdown-cenario-spe-home-page", component_property="value")],
 )
 def update_spe_dfs(n_clicks: int, banco: str, spe: str, nome_cenario: str):
-
     if n_clicks == 0:
         return no_update
 
     if n_clicks > 0:
 
-        if banco == 'Eólicas':
+        if banco == 'Biomassa':
             tipo: str = 'dre'
             chave: str = 'dre'
             conta_index: str = "Demonstração de Resultado"
@@ -451,69 +430,6 @@ def update_spe_dfs(n_clicks: int, banco: str, spe: str, nome_cenario: str):
             )
 
             return div_retorno
-
-
-# @callback(
-#     Output(component_id="id-home-section-page-dfs-0", component_property="children"),
-#     Output(component_id="id-home-btn-processar", component_property="disabled"),
-#     [Input(component_id="id-radio-items-bancos-home-page", component_property="value"),
-#      Input(component_id="id-dropdown-spe-home-page", component_property="value"),
-#      Input(component_id="id-dropdown-cenario-spe-home-page", component_property="value"),
-#      Input(component_id="id-home-btn-processar", component_property="n_clicks")],
-# )
-# def update_spe_dfs(banco: str, spe: str, nome_cenario: str, n_clicks: int):
-#     # Bloqueio inicial até que o botão seja clicado ao menos uma vez
-#     if n_clicks == 0 and not callback_context.triggered:
-#         return no_update, True
-#
-#     # Mostra estado de carregamento no botão e ativa o dcc.Loading
-#     if n_clicks > 0 or callback_context.triggered:
-#         if not banco or not spe or not nome_cenario:
-#             return html.Div("Por favor, selecione todas as opções."), False
-#
-#         # Processamento das tabelas
-#         tipo: str = 'dre'
-#         chave: str = 'dre'
-#         conta_index: str = "Demonstração de Resultado"
-#         tabela_dre = preparar_tabela_graph(collection_name=spe, banco=banco, tipo=tipo, chave=chave,
-#                                            conta_index=conta_index, cenario_nome=nome_cenario)
-#
-#         tipo: str = 'bp'
-#         chave: str = 'bp'
-#         conta_index: str = "Balanço Patrimonial"
-#         tabela_bp = preparar_tabela_graph(collection_name=spe, banco=banco, tipo=tipo, chave=chave,
-#                                           conta_index=conta_index, cenario_nome=nome_cenario)
-#
-#         tipo: str = 'fcd'
-#         chave: str = 'fcd'
-#         conta_index: str = "Fluxo de Caixa Direto"
-#         tabela_fcd = preparar_tabela_graph(collection_name=spe, banco=banco, tipo=tipo, chave=chave,
-#                                            conta_index=conta_index, cenario_nome=nome_cenario)
-#
-#         dash_dre_format = format_data_table(tabela_dre)
-#         dash_bp_format = format_data_table(tabela_bp)
-#         dash_fcd_format = format_data_table(tabela_fcd)
-#
-#         div_retorno = html.Div(
-#             children=[
-#                 html.H6(f"DRE Gerencial da SPE {spe} referente ao banco de dados {banco}."),
-#                 html.Hr(),
-#                 dash_dre_format,
-#                 html.Hr(),
-#                 html.H6(f"BP Gerencial da SPE {spe} referente ao banco de dados {banco}."),
-#                 html.Hr(),
-#                 dash_bp_format,
-#                 html.Hr(),
-#                 html.H6(f"FCD Gerencial da SPE {spe} referente ao banco de dados {banco}."),
-#                 html.Hr(),
-#                 dash_fcd_format
-#             ]
-#         )
-#
-#         return div_retorno, False
-#
-#     return no_update, False
-
 
 
 # Callback de teste para check dos dados armazenados ------------------------------------------------------------------

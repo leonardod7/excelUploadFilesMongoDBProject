@@ -138,8 +138,8 @@ def preparar_tabela_graph(collection_name: str, banco: str, tipo: str, chave: st
 # 2) Criando a função --------------------------------------------------------------------------------------------------
 
 if __name__ == '__main__':
-    collection_name: str = "SPE Carazinho"
-    banco: str = "Eólicas"
+    collection_name: str = "Vale do Paraná"
+    banco: str = "Biomassa"
     tipo: str = 'fcd'
     chave: str = 'fcd'
     conta_index: str = "Fluxo de Caixa Direto"
