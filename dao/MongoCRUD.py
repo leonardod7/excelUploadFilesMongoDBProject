@@ -1,6 +1,6 @@
-from model.MongoConnection import MongoEolicasConnection
-
-# Carrega as variáveis de ambiente do arquivo .env
+from model.MongoConnection import *
+from pymongo.errors import DuplicateKeyError
+from dash import html
 
 
 class MongoDBCRUD:
@@ -9,7 +9,8 @@ class MongoDBCRUD:
     Classe que contém as operações CRUD para o MongoDB.
     """
 
-    def __init__(self, db_connection: MongoEolicasConnection, collection_name: str | None) -> None:
+    def __init__(self, db_connection: MongoBiomassaConnection | MongoSolarConnection | MongoHidroConnection,
+                 collection_name: str | None) -> None:
         self.__collection_name = collection_name
         self.__db_connection = db_connection
 
@@ -50,21 +51,29 @@ class MongoDBCRUD:
         :param unique_fields: Dicionário contendo os campos 'empresa', 'nome' e outros pelos quais queremos verificar duplicidade.
         :return: Documento inserido ou o documento existente caso já tenha sido inserido anteriormente.
         """
+
+        if unique_fields is None:
+            raise ValueError("Os campos únicos para verificação não foram fornecidos.")
+
         collection = self.get_collection()
 
         # Verifica se o documento contém o campo 'parte' e combina com os campos únicos
-        if "parte" in document and unique_fields:
+        if "parte" in document and unique_fields:  # if "parte" in document and unique_fields:
             query = {
-                "empresa": unique_fields.get("empresa"),
-                "nome": unique_fields.get("nome"),
-                "parte": document["parte"]  # Verifica a combinação de empresa, nome e parte
+                "empresa": unique_fields.get("empresa"),  # Nome da empresa
+                "nome": unique_fields.get("nome"),  # nome do cenário
+                "parte": document["parte"],  # Verifica a parte do documento
+                "tipo": document["tipo"]  # Verifica o tipo do documento
             }
 
             # Verifica se um documento com essa combinação já existe
             existing_document = collection.find_one(query)
 
             if existing_document:
-                print(f"Documento com empresa '{query['empresa']}', nome '{query['nome']}' e parte '{query['parte']}' já existe.")
+                print(f"Documento com empresa '{query['empresa']}', "
+                      f"nome '{query['nome']}' "
+                      f"tipo '{query['tipo']}' "
+                      f"parte '{query['parte']}' já existe.")
                 return existing_document  # Retorna o documento existente
 
         # Se não existe, insere o novo documento
@@ -114,28 +123,48 @@ class MongoDBCRUD:
 
         return response
 
-    def delete_one_document(self, query: dict) -> None:
+    def delete_one_document(self, query: dict, drop_collection: bool = False) -> None:
         """
         Função que apaga um documento da coleção com base em um filtro.
         :param query: Filtro para a exclusão do documento.
+        :param drop_collection: Se True, a coleção também será apagada.
+        :return: Mensagem de confirmação da exclusão.
         """
         collection = self.get_collection()
         data = collection.delete_one(query)
 
         response: str = f"{data.deleted_count} documento foi deletado."
 
+        if drop_collection and data.deleted_count > 0:
+            collection.drop()
+            response += " A coleção também foi removida."
+
         return response
+
+    def insert_one(self, document: dict) -> dict:
+        """
+        Função que insere um único documento na coleção.
+        :param document: Documento que queremos inserir.
+        :return: Documento inserido.
+        """
+        collection = self.get_collection()
+
+        # Inserção do documento
+        collection.insert_one(document)
+        print(f"Documento inserido com sucesso.")
+
+        return document
 
 
 # Testando a conexão como o Mongo DB Atlas -----------------------------------------------------------------------------
 if __name__ == '__main__':
 
-    cliente = MongoEolicasConnection()
+    cliente = MongoSolarConnection()
     cliente.connect_to_db()
     db_connection = cliente.get_db_connection()
 
-    collection_name: str = "SPE Boi Gordo"
-    eolicas_crud = MongoDBCRUD(db_connection=cliente, collection_name = collection_name)
+    collection_name: str = "SPE Moinhos de Vento"
+    eolicas_crud = MongoDBCRUD(db_connection=cliente, collection_name=collection_name)
 
     print("Coleções no banco de dados:")
     print(eolicas_crud.list_collections())
@@ -144,3 +173,7 @@ if __name__ == '__main__':
     cliente.close_connection()
 
 
+# Original
+
+
+# Original
