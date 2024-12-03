@@ -58,6 +58,10 @@ def display_page(pathname):
         return home_page()  # Página padrão é a home
 
 
-# Rodando o app -------------------------------------------------------------------------------------------------------
+# Para rodar localmente com atualização de código
+# if __name__ == '__main__':
+#     app.run(debug=True, port=8064)
+
+# Para deploy
 if __name__ == '__main__':
-    app.run(debug=True, port=8064)
+    app.run(debug=False)
