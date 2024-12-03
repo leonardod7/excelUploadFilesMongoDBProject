@@ -9,7 +9,7 @@ from pages.listar_documento import consultar_documentos_page
 _dash_renderer._set_react_version("18.2.0")
 
 # Importando componentes do app ----------------------------------------------------------------------------------------
-from src.app import *
+from app import *
 from components.navbar import navbar
 
 # Criando o app --------------------------------------------------------------------------------------------------------
