@@ -137,16 +137,16 @@ def preparar_tabela_graph(collection_name: str, banco: str, tipo: str, chave: st
 
 # 2) Criando a função --------------------------------------------------------------------------------------------------
 
-if __name__ == '__main__':
-    collection_name: str = "Vale do Paraná"
-    banco: str = "Biomassa"
-    tipo: str = 'fcd'
-    chave: str = 'fcd'
-    conta_index: str = "Fluxo de Caixa Direto"
-    cenario_nome: str = "Cenário 2"
-    df = preparar_tabela_graph(collection_name=collection_name, banco=banco, tipo=tipo, chave=chave,
-                               conta_index=conta_index, cenario_nome=cenario_nome)
-    print(df)
+# if __name__ == '__main__':
+#     collection_name: str = "Vale do Paraná"
+#     banco: str = "Biomassa"
+#     tipo: str = 'fcd'
+#     chave: str = 'fcd'
+#     conta_index: str = "Fluxo de Caixa Direto"
+#     cenario_nome: str = "Cenário 2"
+#     df = preparar_tabela_graph(collection_name=collection_name, banco=banco, tipo=tipo, chave=chave,
+#                                conta_index=conta_index, cenario_nome=cenario_nome)
+#     print(df)
 
     # Essa forma é a forma manual de fazer sem usar a função preparar_tabela_graph
     # try:

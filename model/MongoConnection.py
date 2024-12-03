@@ -5,12 +5,15 @@ from dotenv import load_dotenv
 # Carrega as variáveis de ambiente do arquivo .env
 load_dotenv()
 
+# No processo de fazer o deploy no render, o mongoDB Atlas não aceitou a string de conexão com o banco de dados abaixo:
 # 'mongodb+srv://{}:{}@{}/{}?retryWrites=true&w=majority&appName={}'
+# Ele recomendou a string de conexão abaixo:
+# 'mongodb://{}:{}@{}/{}?retryWrites=true&w=majority&appName={}'
 
 class MongoBiomassaConnection:
     def __init__(self) -> None:
         self.__connection_string = (
-            'mongodb://{}:{}@{}/{}?retryWrites=true&w=majority&appName={}'
+            'mongodb+srv://{}:{}@{}/{}?retryWrites=true&w=majority&appName={}'
         ).format(
             os.getenv("USERNAME"),
             os.getenv("PASSWORD"),
@@ -111,19 +114,19 @@ class MongoHidroConnection:
 
 
 # Testando a Conexão com o MongoDB Atlas -------------------------------------------------------------------------------
-if __name__ == '__main__':
-
-    # Conexão com o banco de dados Biomassa
-    connection_eolicas = MongoBiomassaConnection()
-    connection_eolicas.connect_to_db()
-    connection_eolicas.close_connection()
-
-    # Conexão com o banco de dados Solar
-    connection_solar = MongoSolarConnection()
-    connection_solar.connect_to_db()
-    connection_solar.close_connection()
-
-    # Conexão com o banco de dados Hidrelétricas
-    connection_hidro = MongoHidroConnection()
-    connection_hidro.connect_to_db()
-    connection_hidro.close_connection()
+# if __name__ == '__main__':
+#
+#     # Conexão com o banco de dados Biomassa
+#     connection_eolicas = MongoBiomassaConnection()
+#     connection_eolicas.connect_to_db()
+#     connection_eolicas.close_connection()
+#
+#     # Conexão com o banco de dados Solar
+#     connection_solar = MongoSolarConnection()
+#     connection_solar.connect_to_db()
+#     connection_solar.close_connection()
+#
+#     # Conexão com o banco de dados Hidrelétricas
+#     connection_hidro = MongoHidroConnection()
+#     connection_hidro.connect_to_db()
+#     connection_hidro.close_connection()

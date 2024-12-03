@@ -157,20 +157,20 @@ class MongoDBCRUD:
 
 
 # Testando a conexão como o Mongo DB Atlas -----------------------------------------------------------------------------
-if __name__ == '__main__':
-
-    cliente = MongoSolarConnection()
-    cliente.connect_to_db()
-    db_connection = cliente.get_db_connection()
-
-    collection_name: str = "SPE Moinhos de Vento"
-    eolicas_crud = MongoDBCRUD(db_connection=cliente, collection_name=collection_name)
-
-    print("Coleções no banco de dados:")
-    print(eolicas_crud.list_collections())
-
-    # Fechando a conexão
-    cliente.close_connection()
+# if __name__ == '__main__':
+#
+#     cliente = MongoSolarConnection()
+#     cliente.connect_to_db()
+#     db_connection = cliente.get_db_connection()
+#
+#     collection_name: str = "SPE Moinhos de Vento"
+#     eolicas_crud = MongoDBCRUD(db_connection=cliente, collection_name=collection_name)
+#
+#     print("Coleções no banco de dados:")
+#     print(eolicas_crud.list_collections())
+#
+#     # Fechando a conexão
+#     cliente.close_connection()
 
 
 # Original
