@@ -1,6 +1,5 @@
 # 0) Importando as bibliotecas -----------------------------------------------------------------------------------------
 from dash import dcc, html, Input, Output, State, callback, ALL, no_update, callback_context
-from app import cache  # Importar o cache configurado
 from dash.exceptions import PreventUpdate
 from functions.funcoes import conectar_ao_banco, gerar_lista_cards, json_deserial, criar_cenarios, agrupar_por_chave
 import json

@@ -1,5 +1,5 @@
 # Importando as bibliotecas --------------------------------------------------------------------------------------------
-from dash import html, Input, Output, State, dash, dcc, page_registry, _dash_renderer
+from dash import html, Input, Output, dcc, _dash_renderer
 import dash_mantine_components as dmc
 
 from pages.home import home_page
@@ -9,7 +9,7 @@ from pages.listar_documento import consultar_documentos_page
 _dash_renderer._set_react_version("18.2.0")
 
 # Importando componentes do app ----------------------------------------------------------------------------------------
-from app import *
+from src.app import *
 from components.navbar import navbar
 
 # Criando o app --------------------------------------------------------------------------------------------------------
@@ -65,3 +65,6 @@ def display_page(pathname):
 # Para deploy
 if __name__ == '__main__':
     app.run(debug=False)
+
+
+# pip install dash-tools
