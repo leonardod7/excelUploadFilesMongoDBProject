@@ -5,11 +5,12 @@ from dotenv import load_dotenv
 # Carrega as variáveis de ambiente do arquivo .env
 load_dotenv()
 
+# 'mongodb+srv://{}:{}@{}/{}?retryWrites=true&w=majority&appName={}'
 
 class MongoBiomassaConnection:
     def __init__(self) -> None:
         self.__connection_string = (
-            'mongodb+srv://{}:{}@{}/{}?retryWrites=true&w=majority&appName={}'
+            'mongodb://{}:{}@{}/{}?retryWrites=true&w=majority&appName={}'
         ).format(
             os.getenv("USERNAME"),
             os.getenv("PASSWORD"),
